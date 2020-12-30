@@ -1,8 +1,6 @@
 substitutions:
   device_name: "magichome5ch"
   friendly_name: "Magic Home RGB/WW/CW"
-  cold_temp: 6536 K
-  warm_temp: 2000 K
 
 esphome:
   name: ${device_name}
