@@ -32,7 +32,7 @@ web_server:
 
 status_led:
   pin:
-    number: GPIO02
+    number: GPIO2
     inverted: true
 
 sensor:
