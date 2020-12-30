@@ -1,0 +1,117 @@
+substitutions:
+  device_name: "magichome5ch"
+  friendly_name: "Magic Home RGB/WW/CW"
+  cold_temp: 6536 K
+  warm_temp: 2000 K
+
+esphome:
+  name: ${device_name}
+  platform: ESP8266
+  board: esp8285
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_pass
+  domain: ".lan"
+  ap:
+    ssid: ${device_name}
+    password: !secret wifi_ap_pass
+
+captive_portal:
+
+logger:
+  baud_rate: 0
+
+api:
+  password: !secret api_pass
+
+ota:
+  password: !secret api_pass
+
+web_server:
+  port: 80
+  auth:
+    username: admin
+    password: !secret api_pass
+
+binary_sensor:
+  - platform: gpio
+    name: "${device_name} Button"
+    id: button
+    pin:
+      number: GPIO0
+      inverted: true
+
+status_led:
+  pin:
+    number: GPIO2
+    inverted: true
+
+light:
+  - platform: rgbw
+    name: ${friendly_name}
+    id: ${device_name}
+    red: red_channel
+    green: green_channel
+    blue: blue_channel
+    white: cold_white_channel
+    color_interlock: true
+    effects:
+      - random:
+          name: "Slow Random Colors"
+          transition_length: 30s
+          update_interval: 30s
+      - random:
+          name: "Fast Random Colors"
+          transition_length: 4s
+          update_interval: 5s
+      - strobe:
+          name: "Default Strobe"
+      - flicker:
+          name: "Default Flicker"
+      - strobe:
+          name: "Christmas"
+          colors:
+            - state: True
+              brightness: 100%
+              white: 0%
+              red: 100%
+              blue: 0%
+              green: 0%
+              duration: 500ms
+            - state: True
+              brightness: 100%
+              white: 0%
+              red: 0%
+              blue: 0%
+              green: 100%
+              duration: 500ms
+
+output:
+  - platform: esp8266_pwm
+    id: red_channel
+    pin: GPIO14
+  - platform: esp8266_pwm
+    id: green_channel
+    pin: GPIO12
+  - platform: esp8266_pwm
+    id: blue_channel
+    pin: GPIO13
+  - platform: esp8266_pwm
+    id: cold_white_channel
+    pin: GPIO5
+  - platform: esp8266_pwm
+    id: warm_white_channel
+    pin: GPIO15
+
+sensor:
+  - platform: uptime
+    name: '${device_name} Uptime'
+    unit_of_measurement: days
+    update_interval: 300s
+    filters:
+      - multiply: 0.000011574
+
+  - platform: wifi_signal
+    name: '${device_name} WiFi Signal'
+    update_interval: 300s
