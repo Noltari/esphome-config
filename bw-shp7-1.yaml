@@ -1,0 +1,163 @@
+# SN 4462
+substitutions:
+  device_name: bwshp71
+  current_res: "0.002291"
+  voltage_div: "951.4"
+  max_power: "3680"
+
+esphome:
+  name: ${device_name}
+  platform: ESP8266
+  board: esp8285
+  on_boot:
+    then:
+      - switch.turn_off: relay1
+      - switch.turn_on: relay2
+      - output.turn_on: led1
+      - output.turn_off: led2
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_pass
+  domain: ".lan"
+  ap:
+    ssid: ${device_name}
+    password: !secret wifi_ap_pass
+
+captive_portal:
+
+logger:
+  baud_rate: 0
+
+api:
+  password: !secret api_pass
+
+ota:
+  password: !secret api_pass
+
+web_server:
+  port: 80
+  auth:
+    username: admin
+    password: !secret api_pass
+
+binary_sensor:
+  - platform: gpio
+    id: button1
+    name: "${device_name} Button 1"
+    internal: true
+    pin:
+      number: GPIO0
+      mode: INPUT_PULLUP
+      inverted: true
+    on_press:
+      - switch.toggle: relay1
+  - platform: gpio
+    id: button2
+    name: "${device_name} Button 2"
+    internal: true
+    pin:
+      number: GPIO12
+      mode: INPUT_PULLUP
+      inverted: true
+    on_press:
+      - switch.toggle: relay2
+
+output:
+   - platform: esp8266_pwm
+     id: led1
+     pin:
+       number: GPIO13
+       inverted: true
+   - platform: esp8266_pwm
+     id: led2
+     pin:
+       number: GPIO2
+       inverted: true
+
+switch:
+  - platform: gpio
+    pin: GPIO14
+    restore_mode: RESTORE_DEFAULT_OFF
+    id: relay1
+    name: "${device_name} Relay 1"
+    on_turn_on:
+      - output.turn_off: led1
+    on_turn_off:
+      - output.turn_on: led1
+  - platform: gpio
+    pin: GPIO16
+    restore_mode: RESTORE_DEFAULT_OFF
+    id: relay2
+    name: "${device_name} Relay 2"
+    on_turn_on:
+      - output.turn_off: led2
+    on_turn_off:
+      - output.turn_on: led2
+
+status_led:
+  pin:
+    number: GPIO1
+    inverted: true
+
+sensor:
+  - platform: uptime
+    name: "${device_name} Uptime"
+    unit_of_measurement: days
+    update_interval: 300s
+    filters:
+      - multiply: 0.000011574
+
+  - platform: wifi_signal
+    name: "${device_name} WiFi Signal"
+    update_interval: 300s
+
+  - platform: hlw8012
+    sel_pin:
+      number: GPIO3
+      inverted: true
+    cf_pin: GPIO4
+    cf1_pin: GPIO5
+    current_resistor: ${current_res}
+    voltage_divider: ${voltage_div}
+    current:
+      name: "${device_name} Current"
+      unit_of_measurement: "A"
+      accuracy_decimals: 3
+      icon: mdi:flash-outline
+    voltage:
+      name: "${device_name} Voltage"
+      unit_of_measurement: "V"
+      icon: mdi:flash-outline
+    power:
+      name: "${device_name} Power"
+      unit_of_measurement: "W"
+      icon: mdi:flash-outline
+      id: hlw8012_power
+      on_value_range:
+        - above: ${max_power}
+          then:
+            - switch.turn_off: relay1
+            - switch.turn_off: relay2
+            - output.turn_on: led1
+            - output.turn_on: led2
+            - homeassistant.service:
+                service: persistent_notification.create
+                data:
+                  title: Message from ${device_name}
+                data_template:
+                  message: Switch turned off because power exceeded ${max_power}W
+    change_mode_every: 4
+    update_interval: 10s
+
+  - platform: total_daily_energy
+    name: "${device_name} Energy"
+    power_id: hlw8012_power
+    unit_of_measurement: kWh
+    accuracy_decimals: 5
+    filters:
+      - multiply: 0.001
+
+time:
+  - platform: homeassistant
+    id: homeassistant_time
