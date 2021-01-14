@@ -33,9 +33,14 @@ web_server:
 
 esp32_ble_tracker:
 
+i2c:
+  sda: GPIO21
+  scl: GPIO22
+  scan: False
+
 sensor:
   - platform: xiaomi_hhccjcy01
-    mac_address: 'C4:7C:8D:6B:A9:4E'
+    mac_address: "C4:7C:8D:6B:A9:4E"
     temperature:
       name: "Xiaomi MiFlora Temperatura"
     moisture:
@@ -46,12 +51,23 @@ sensor:
       name: "Xiaomi MiFlora Conductividad"
 
   - platform: uptime
-    name: '${device_name} Uptime'
+    name: "${device_name} Uptime"
     unit_of_measurement: days
     update_interval: 300s
     filters:
       - multiply: 0.000011574
 
   - platform: wifi_signal
-    name: '${device_name} WiFi Signal'
+    name: "${device_name} WiFi Signal"
     update_interval: 300s
+
+  - platform: bme280
+    temperature:
+      name: "${device_name} Temperature"
+      oversampling: 16x
+    pressure:
+      name: "${device_name} Pressure"
+    humidity:
+      name: "${device_name} Humidity"
+    address: 0x76
+    update_interval: 60s
