@@ -64,12 +64,12 @@ binary_sensor:
       - switch.toggle: relay2
 
 output:
-   - platform: esp8266_pwm
+   - platform: gpio
      id: led1
      pin:
        number: GPIO13
        inverted: true
-   - platform: esp8266_pwm
+   - platform: gpio
      id: led2
      pin:
        number: GPIO2
