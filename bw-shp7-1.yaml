@@ -147,17 +147,9 @@ sensor:
                   title: Message from ${device_name}
                 data_template:
                   message: Switch turned off because power exceeded ${max_power}W
+    energy:
+      name: "${device_name} Energy"
+      unit_of_measurement: "Wh"
+      icon: mdi:flash-outline
     change_mode_every: 4
     update_interval: 10s
-
-  - platform: total_daily_energy
-    name: "${device_name} Energy"
-    power_id: hlw8012_power
-    unit_of_measurement: kWh
-    accuracy_decimals: 5
-    filters:
-      - multiply: 0.001
-
-time:
-  - platform: homeassistant
-    id: homeassistant_time
