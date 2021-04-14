@@ -9,15 +9,21 @@ esphome:
   name: ${device_name}
   platform: ESP8266
   board: esp8285
+  esp8266_restore_from_flash: true
   on_boot:
+    priority: -100
     then:
-      - output.turn_on: led
-      - switch.turn_off: relay
+      if:
+        condition:
+          switch.is_off: relay
+        then:
+          output.turn_on: led
 
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_pass
   domain: ".lan"
+  reboot_timeout: 60min
   ap:
     ssid: ${device_name}
     password: !secret wifi_ap_pass
@@ -28,6 +34,7 @@ logger:
   baud_rate: 0
 
 api:
+  reboot_timeout: 60min
   password: !secret api_pass
 
 ota:
@@ -61,9 +68,11 @@ switch:
     id: relay
     name: "${device_name} Relay"
     on_turn_on:
-      - output.turn_off: led
+      then:
+        - output.turn_off: led
     on_turn_off:
-      - output.turn_on: led
+      then:
+        - output.turn_on: led
 
 status_led:
   pin:
@@ -73,10 +82,26 @@ status_led:
 sensor:
   - platform: uptime
     name: "${device_name} Uptime"
-    unit_of_measurement: days
-    update_interval: 300s
-    filters:
-      - multiply: 0.000011574
+    id: uptime_sensor
+    update_interval: 60s
+    on_raw_value:
+      then:
+        - text_sensor.template.publish:
+            id: uptime_human
+            state: !lambda |-
+              int seconds = round(id(uptime_sensor).raw_state);
+              int days = seconds / (24 * 3600);
+              seconds = seconds % (24 * 3600);
+              int hours = seconds / 3600;
+              seconds = seconds % 3600;
+              int minutes = seconds /  60;
+              seconds = seconds % 60;
+              return (
+                (days ? String(days) + "d " : "") +
+                (hours ? String(hours) + "h " : "") +
+                (minutes ? String(minutes) + "m " : "") +
+                (String(seconds) + "s")
+              ).c_str();
 
   - platform: wifi_signal
     name: "${device_name} WiFi Signal"
@@ -90,25 +115,25 @@ sensor:
     cf1_pin: GPIO4
     current_resistor: ${current_res}
     voltage_divider: ${voltage_div}
-    current:
-      name: "${device_name} Current"
-      unit_of_measurement: "A"
-      accuracy_decimals: 3
-      icon: mdi:flash-outline
     voltage:
       name: "${device_name} Voltage"
       unit_of_measurement: "V"
       icon: mdi:flash-outline
+      id: hlw8012_voltage
     power:
       name: "${device_name} Power"
       unit_of_measurement: "W"
       icon: mdi:flash-outline
       id: hlw8012_power
+      on_value:
+        - sensor.template.publish:
+            id: hlw8012_current
+            state: !lambda 'return id(hlw8012_voltage).state > 0 ? (id(hlw8012_power).state / id(hlw8012_voltage).state) : 0;'
       on_value_range:
         - above: ${max_power}
           then:
-            - output.turn_on: led
             - switch.turn_off: relay
+            - output.turn_on: led
             - homeassistant.service:
                 service: persistent_notification.create
                 data:
@@ -119,5 +144,18 @@ sensor:
       name: "${device_name} Energy"
       unit_of_measurement: "Wh"
       icon: mdi:flash-outline
-    change_mode_every: 4
+    change_mode_every: 4294967295
     update_interval: 10s
+
+  - platform: template
+    id: hlw8012_current
+    name: "${device_name} Current"
+    unit_of_measurement: "A"
+    accuracy_decimals: 3
+    icon: mdi:flash-outline
+
+text_sensor:
+  - platform: template
+    name: "${device_name} Uptime Human Readable"
+    id: uptime_human
+    icon: mdi:clock-start

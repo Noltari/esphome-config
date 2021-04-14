@@ -10,8 +10,9 @@ wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_pass
   domain: ".lan"
+  reboot_timeout: 60min
   ap:
-    ssid: "Nodemcu-32S"
+    ssid: ${device_name}
     password: !secret wifi_ap_pass
 
 captive_portal:
@@ -20,6 +21,7 @@ logger:
   baud_rate: 0
 
 api:
+  reboot_timeout: 60min
   password: !secret api_pass
 
 ota:
@@ -52,10 +54,26 @@ sensor:
 
   - platform: uptime
     name: "${device_name} Uptime"
-    unit_of_measurement: days
-    update_interval: 300s
-    filters:
-      - multiply: 0.000011574
+    id: uptime_sensor
+    update_interval: 60s
+    on_raw_value:
+      then:
+        - text_sensor.template.publish:
+            id: uptime_human
+            state: !lambda |-
+              int seconds = round(id(uptime_sensor).raw_state);
+              int days = seconds / (24 * 3600);
+              seconds = seconds % (24 * 3600);
+              int hours = seconds / 3600;
+              seconds = seconds % 3600;
+              int minutes = seconds /  60;
+              seconds = seconds % 60;
+              return (
+                (days ? String(days) + "d " : "") +
+                (hours ? String(hours) + "h " : "") +
+                (minutes ? String(minutes) + "m " : "") +
+                (String(seconds) + "s")
+              ).c_str();
 
   - platform: wifi_signal
     name: "${device_name} WiFi Signal"
@@ -105,3 +123,9 @@ sensor:
         ((17.67*id(bme280_temperature).state)/(243.5+id(bme280_temperature).state))));
     unit_of_measurement: °C
     icon: "mdi:thermometer-alert"
+
+text_sensor:
+  - platform: template
+    name: "${device_name} Uptime Human Readable"
+    id: uptime_human
+    icon: mdi:clock-start

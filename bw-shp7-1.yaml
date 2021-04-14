@@ -9,17 +9,26 @@ esphome:
   name: ${device_name}
   platform: ESP8266
   board: esp8285
+  esp8266_restore_from_flash: true
   on_boot:
+    priority: -100
     then:
-      - switch.turn_off: relay1
-      - switch.turn_on: relay2
-      - output.turn_on: led1
-      - output.turn_off: led2
+      - if:
+          condition:
+            switch.is_off: relay1
+          then:
+            output.turn_on: led1
+      - if:
+          condition:
+            switch.is_off: relay2
+          then:
+            output.turn_on: led2
 
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_pass
   domain: ".lan"
+  reboot_timeout: 60min
   ap:
     ssid: ${device_name}
     password: !secret wifi_ap_pass
@@ -30,6 +39,7 @@ logger:
   baud_rate: 0
 
 api:
+  reboot_timeout: 60min
   password: !secret api_pass
 
 ota:
@@ -44,7 +54,6 @@ web_server:
 binary_sensor:
   - platform: gpio
     id: button1
-    name: "${device_name} Button 1"
     internal: true
     pin:
       number: GPIO0
@@ -54,7 +63,6 @@ binary_sensor:
       - switch.toggle: relay1
   - platform: gpio
     id: button2
-    name: "${device_name} Button 2"
     internal: true
     pin:
       number: GPIO12
@@ -82,18 +90,22 @@ switch:
     id: relay1
     name: "${device_name} Relay 1"
     on_turn_on:
-      - output.turn_off: led1
+      then:
+        - output.turn_off: led1
     on_turn_off:
-      - output.turn_on: led1
+      then:
+        - output.turn_on: led1
   - platform: gpio
     pin: GPIO16
-    restore_mode: RESTORE_DEFAULT_OFF
+    restore_mode: RESTORE_DEFAULT_ON
     id: relay2
     name: "${device_name} Relay 2"
     on_turn_on:
-      - output.turn_off: led2
+      then:
+        - output.turn_off: led2
     on_turn_off:
-      - output.turn_on: led2
+      then:
+        - output.turn_on: led2
 
 status_led:
   pin:
@@ -103,10 +115,26 @@ status_led:
 sensor:
   - platform: uptime
     name: "${device_name} Uptime"
-    unit_of_measurement: days
-    update_interval: 300s
-    filters:
-      - multiply: 0.000011574
+    id: uptime_sensor
+    update_interval: 60s
+    on_raw_value:
+      then:
+        - text_sensor.template.publish:
+            id: uptime_human
+            state: !lambda |-
+              int seconds = round(id(uptime_sensor).raw_state);
+              int days = seconds / (24 * 3600);
+              seconds = seconds % (24 * 3600);
+              int hours = seconds / 3600;
+              seconds = seconds % 3600;
+              int minutes = seconds /  60;
+              seconds = seconds % 60;
+              return (
+                (days ? String(days) + "d " : "") +
+                (hours ? String(hours) + "h " : "") +
+                (minutes ? String(minutes) + "m " : "") +
+                (String(seconds) + "s")
+              ).c_str();
 
   - platform: wifi_signal
     name: "${device_name} WiFi Signal"
@@ -120,20 +148,20 @@ sensor:
     cf1_pin: GPIO5
     current_resistor: ${current_res}
     voltage_divider: ${voltage_div}
-    current:
-      name: "${device_name} Current"
-      unit_of_measurement: "A"
-      accuracy_decimals: 3
-      icon: mdi:flash-outline
     voltage:
       name: "${device_name} Voltage"
       unit_of_measurement: "V"
       icon: mdi:flash-outline
+      id: hlw8012_voltage
     power:
       name: "${device_name} Power"
       unit_of_measurement: "W"
       icon: mdi:flash-outline
       id: hlw8012_power
+      on_value:
+        - sensor.template.publish:
+            id: hlw8012_current
+            state: !lambda 'return id(hlw8012_voltage).state > 0 ? (id(hlw8012_power).state / id(hlw8012_voltage).state) : 0;'
       on_value_range:
         - above: ${max_power}
           then:
@@ -151,5 +179,18 @@ sensor:
       name: "${device_name} Energy"
       unit_of_measurement: "Wh"
       icon: mdi:flash-outline
-    change_mode_every: 4
+    change_mode_every: 4294967295
     update_interval: 10s
+
+  - platform: template
+    id: hlw8012_current
+    name: "${device_name} Current"
+    unit_of_measurement: "A"
+    accuracy_decimals: 3
+    icon: mdi:flash-outline
+
+text_sensor:
+  - platform: template
+    name: "${device_name} Uptime Human Readable"
+    id: uptime_human
+    icon: mdi:clock-start
