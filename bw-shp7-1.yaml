@@ -70,6 +70,10 @@ binary_sensor:
       inverted: true
     on_press:
       - switch.toggle: relay2
+  - platform: gpio
+    pin: GPIO15
+    id: gpio15_irq
+    internal: true
 
 output:
    - platform: gpio
