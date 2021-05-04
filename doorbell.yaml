@@ -1,0 +1,116 @@
+substitutions:
+  device_name: doorbell
+
+esphome:
+  name: ${device_name}
+  platform: ESP8266
+  board: esp01_1m
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_pass
+  domain: ".lan"
+  reboot_timeout: 60min
+  ap:
+    ssid: ${device_name}
+    password: !secret wifi_ap_pass
+
+captive_portal:
+
+logger:
+  baud_rate: 0
+
+api:
+  reboot_timeout: 60min
+  password: !secret api_pass
+
+ota:
+  password: !secret api_pass
+
+web_server:
+  port: 80
+  auth:
+    username: admin
+    password: !secret api_pass
+
+globals:
+  - id: chime
+    type: bool
+    restore_value: true
+    initial_value: 'true'
+
+switch:
+  - platform: gpio
+    name: "${device_name} Chime"
+    pin: GPIO04
+    id: relay
+    icon: mdi:alarm-bell
+    restore_mode: ALWAYS_OFF
+
+  - platform: template
+    name: "${device_name} Chime Active"
+    id: chime_active
+    restore_state: false
+    turn_on_action:
+      - globals.set:
+          id: chime
+          value: 'true'
+    turn_off_action:
+      - globals.set:
+          id: chime
+          value: 'false'
+    lambda: |-
+      return id(chime);
+
+binary_sensor:
+  - platform: gpio
+    id: button
+    name: "${device_name} Button"
+    pin:
+      number: GPIO05
+    filters:
+      - delayed_on: 25ms
+      - delayed_off: 25ms
+    on_press:
+      then:
+        if:
+          condition:
+            - switch.is_on: chime_active
+          then:
+            - switch.turn_on: relay
+    on_release:
+      - switch.turn_off: relay
+
+sensor:
+  - platform: uptime
+    name: "${device_name} Uptime"
+    id: uptime_sensor
+    update_interval: 60s
+    on_raw_value:
+      then:
+        - text_sensor.template.publish:
+            id: uptime_human
+            state: !lambda |-
+              int seconds = round(id(uptime_sensor).raw_state);
+              int days = seconds / (24 * 3600);
+              seconds = seconds % (24 * 3600);
+              int hours = seconds / 3600;
+              seconds = seconds % 3600;
+              int minutes = seconds /  60;
+              seconds = seconds % 60;
+              return (
+                (days ? String(days) + "d " : "") +
+                (hours ? String(hours) + "h " : "") +
+                (minutes ? String(minutes) + "m " : "") +
+                (String(seconds) + "s")
+              ).c_str();
+
+  - platform: wifi_signal
+    name: "${device_name} WiFi Signal"
+    update_interval: 300s
+
+text_sensor:
+  - platform: template
+    name: "${device_name} Uptime Human Readable"
+    id: uptime_human
+    icon: mdi:clock-start
