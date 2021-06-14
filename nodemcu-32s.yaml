@@ -33,25 +33,12 @@ web_server:
     username: admin
     password: !secret api_pass
 
-esp32_ble_tracker:
-
 i2c:
   sda: GPIO21
   scl: GPIO22
   scan: False
 
 sensor:
-  - platform: xiaomi_hhccjcy01
-    mac_address: "C4:7C:8D:6B:A9:4E"
-    temperature:
-      name: "Xiaomi MiFlora Temperatura"
-    moisture:
-      name: "Xiaomi MiFlora Humedad"
-    illuminance:
-      name: "Xiaomi MiFlora Iluminación"
-    conductivity:
-      name: "Xiaomi MiFlora Conductividad"
-
   - platform: uptime
     name: "${device_name} Uptime"
     id: uptime_sensor
