@@ -1,4 +1,5 @@
 # SN 2962
+# Usage: Caldera
 substitutions:
   device_name: bwshp63
   current_res: "0.00117"
