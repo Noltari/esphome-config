@@ -1,7 +1,7 @@
 # SN 4462
 # Usage: Skynet
 substitutions:
-  device_name: bwshp6
+  device_name: bwshp61
   current_res: "0.00117"
   voltage_div: "755"
   max_power: "3450"
