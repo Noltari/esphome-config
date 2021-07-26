@@ -90,8 +90,8 @@ output:
 
 switch:
   - platform: gpio
-    pin: GPIO14
-    restore_mode: RESTORE_DEFAULT_OFF
+    pin: GPIO16
+    restore_mode: RESTORE_DEFAULT_ON
     id: relay1
     name: "${device_name} Relay 1"
     on_turn_on:
@@ -101,8 +101,8 @@ switch:
       then:
         - output.turn_on: led1
   - platform: gpio
-    pin: GPIO16
-    restore_mode: RESTORE_DEFAULT_ON
+    pin: GPIO14
+    restore_mode: RESTORE_DEFAULT_OFF
     id: relay2
     name: "${device_name} Relay 2"
     on_turn_on:
