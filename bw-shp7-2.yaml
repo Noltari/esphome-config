@@ -1,0 +1,238 @@
+# SN 2921
+# Usage: Dormitorio
+substitutions:
+  device_name: bwshp72
+  current_res: "0.002291"
+  voltage_div: "951.4"
+  max_power: "3680"
+
+esphome:
+  name: ${device_name}
+  platform: ESP8266
+  board: esp8285
+  esp8266_restore_from_flash: false
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_pass
+  domain: ".lan"
+  reboot_timeout: 60min
+  ap:
+    ssid: ${device_name}
+    password: !secret wifi_ap_pass
+
+captive_portal:
+
+logger:
+  baud_rate: 0
+
+api:
+  reboot_timeout: 60min
+  password: !secret api_pass
+
+ota:
+  password: !secret api_pass
+
+web_server:
+  port: 80
+  auth:
+    username: admin
+    password: !secret api_pass
+
+binary_sensor:
+  - platform: gpio
+    id: button1
+    internal: true
+    pin:
+      number: GPIO0
+      mode: INPUT_PULLUP
+      inverted: true
+    on_press:
+      - switch.toggle: relay1
+  - platform: gpio
+    id: button2
+    internal: true
+    pin:
+      number: GPIO12
+      mode: INPUT_PULLUP
+      inverted: true
+    on_press:
+      - switch.toggle: relay2
+  - platform: gpio
+    pin: GPIO15
+    id: gpio15_irq
+    internal: true
+
+output:
+   - platform: gpio
+     id: led1
+     pin:
+       number: GPIO13
+       inverted: true
+   - platform: gpio
+     id: led2
+     pin:
+       number: GPIO2
+       inverted: true
+
+switch:
+  - platform: gpio
+    pin: GPIO16
+    restore_mode: RESTORE_DEFAULT_OFF
+    id: relay1
+    name: "${device_name} Relay 1"
+    on_turn_on:
+      then:
+        - output.turn_off: led1
+        - if:
+            condition:
+              - script.is_running: fan_script
+            then:
+              - script.stop: fan_script
+        - script.execute: fan_script
+    on_turn_off:
+      then:
+        - output.turn_on: led1
+        - if:
+            condition:
+              - script.is_running: fan_script
+            then:
+              - script.stop: fan_script
+  - platform: gpio
+    pin: GPIO14
+    restore_mode: RESTORE_DEFAULT_OFF
+    id: relay2
+    name: "${device_name} Relay 2"
+    on_turn_on:
+      then:
+        - output.turn_off: led2
+    on_turn_off:
+      then:
+        - output.turn_on: led2
+
+status_led:
+  pin:
+    number: GPIO1
+    inverted: true
+
+sensor:
+  - platform: uptime
+    name: "${device_name} Uptime"
+    id: uptime_sensor
+    update_interval: 60s
+    on_raw_value:
+      then:
+        - text_sensor.template.publish:
+            id: uptime_human
+            state: !lambda |-
+              int seconds = round(id(uptime_sensor).raw_state);
+              int days = seconds / (24 * 3600);
+              seconds = seconds % (24 * 3600);
+              int hours = seconds / 3600;
+              seconds = seconds % 3600;
+              int minutes = seconds /  60;
+              seconds = seconds % 60;
+              return (
+                (days ? String(days) + "d " : "") +
+                (hours ? String(hours) + "h " : "") +
+                (minutes ? String(minutes) + "m " : "") +
+                (String(seconds) + "s")
+              ).c_str();
+
+  - platform: wifi_signal
+    name: "${device_name} WiFi Signal"
+    update_interval: 300s
+
+  - platform: hlw8012
+    sel_pin:
+      number: GPIO3
+      inverted: true
+    cf_pin: GPIO4
+    cf1_pin: GPIO5
+    current_resistor: ${current_res}
+    voltage_divider: ${voltage_div}
+    voltage:
+      name: "${device_name} Voltage"
+      unit_of_measurement: "V"
+      icon: mdi:flash-outline
+      id: hlw8012_voltage
+    power:
+      name: "${device_name} Power"
+      unit_of_measurement: "W"
+      icon: mdi:flash-outline
+      id: hlw8012_power
+      on_value:
+        - sensor.template.publish:
+            id: hlw8012_current
+            state: !lambda 'return id(hlw8012_voltage).state > 0 ? (id(hlw8012_power).state / id(hlw8012_voltage).state) : 0;'
+      on_value_range:
+        - above: ${max_power}
+          then:
+            - switch.turn_off: relay1
+            - switch.turn_off: relay2
+            - output.turn_on: led1
+            - output.turn_on: led2
+            - homeassistant.service:
+                service: persistent_notification.create
+                data:
+                  title: Message from ${device_name}
+                data_template:
+                  message: Switch turned off because power exceeded ${max_power}W
+    energy:
+      name: "${device_name} Energy"
+      unit_of_measurement: "Wh"
+      icon: mdi:flash-outline
+    change_mode_every: 4294967295
+    update_interval: 10s
+
+  - platform: template
+    id: hlw8012_current
+    name: "${device_name} Current"
+    unit_of_measurement: "A"
+    accuracy_decimals: 3
+    icon: mdi:flash-outline
+
+  - platform: homeassistant
+    name: "Fan Hours"
+    entity_id: sensor.fan_hours
+    id: fan_hours
+    on_value:
+      - if:
+          condition:
+            - script.is_running: fan_script
+          then:
+            - script.stop: fan_script
+            - script.execute: fan_script
+
+script:
+  - id: fan_script
+    then:
+      - switch.turn_on: relay1
+      - if:
+          condition:
+            lambda: 'return id(fan_hours).state > 0;'
+          then:
+            - delay: !lambda 'return id(fan_hours).state * 60 * 60 * 1000;'
+            - switch.turn_off: relay1
+
+text_sensor:
+  - platform: template
+    name: "${device_name} Uptime Human Readable"
+    id: uptime_human
+    icon: mdi:clock-start
+
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+    timezone: Europe/Madrid
+    on_time:
+      - seconds: 00
+        minutes: 00
+        hours: 7
+        then:
+          - switch.turn_off: relay2
+      - seconds: 00
+        minutes: 00
+        hours: 22
+        then:
+          - switch.turn_on: relay2
