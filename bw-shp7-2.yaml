@@ -3,7 +3,7 @@
 substitutions:
   device_name: bwshp72
   current_res: "0.002291"
-  voltage_div: "951.4"
+  voltage_div: "945.7"
   max_power: "3680"
 
 esphome:
