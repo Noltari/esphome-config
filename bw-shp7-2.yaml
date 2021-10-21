@@ -2,7 +2,7 @@
 # Usage: Dormitorio
 substitutions:
   device_name: bwshp72
-  current_res: "0.002291"
+  current_res: "0.00131"
   voltage_div: "945.7"
   max_power: "3680"
 
@@ -151,6 +151,11 @@ sensor:
     cf1_pin: GPIO5
     current_resistor: ${current_res}
     voltage_divider: ${voltage_div}
+    current:
+      name: "${device_name} Current"
+      unit_of_measurement: "A"
+      icon: mdi:flash-outline
+      accuracy_decimals: 3
     voltage:
       name: "${device_name} Voltage"
       unit_of_measurement: "V"
@@ -160,11 +165,6 @@ sensor:
       name: "${device_name} Power"
       unit_of_measurement: "W"
       icon: mdi:flash-outline
-      id: hlw8012_power
-      on_value:
-        - sensor.template.publish:
-            id: hlw8012_current
-            state: !lambda 'return id(hlw8012_voltage).state > 0 ? (id(hlw8012_power).state / id(hlw8012_voltage).state) : 0;'
       on_value_range:
         - above: ${max_power}
           then:
@@ -182,15 +182,8 @@ sensor:
       name: "${device_name} Energy"
       unit_of_measurement: "Wh"
       icon: mdi:flash-outline
-    change_mode_every: 4294967295
+    change_mode_every: 4
     update_interval: 10s
-
-  - platform: template
-    id: hlw8012_current
-    name: "${device_name} Current"
-    unit_of_measurement: "A"
-    accuracy_decimals: 3
-    icon: mdi:flash-outline
 
   - platform: homeassistant
     name: "Fan Hours"
