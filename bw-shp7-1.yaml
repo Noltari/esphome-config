@@ -58,7 +58,9 @@ binary_sensor:
     internal: true
     pin:
       number: GPIO0
-      mode: INPUT_PULLUP
+      mode:
+        input: true
+        pullup: true
       inverted: true
     on_press:
       - switch.toggle: relay1
@@ -67,7 +69,9 @@ binary_sensor:
     internal: true
     pin:
       number: GPIO12
-      mode: INPUT_PULLUP
+      mode:
+        input: true
+        pullup: true
       inverted: true
     on_press:
       - switch.toggle: relay2
