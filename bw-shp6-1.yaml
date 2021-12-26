@@ -49,12 +49,16 @@ web_server:
 
 binary_sensor:
   - platform: gpio
-    id: button
+    id: button1
     internal: true
     pin:
       number: GPIO13
     on_press:
       - switch.toggle: relay
+
+button:
+  - platform: restart
+    name: "${device_name} Restart"
 
 output:
   - platform: gpio

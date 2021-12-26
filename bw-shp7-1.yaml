@@ -64,6 +64,7 @@ binary_sensor:
       inverted: true
     on_press:
       - switch.toggle: relay1
+
   - platform: gpio
     id: button2
     internal: true
@@ -75,10 +76,15 @@ binary_sensor:
       inverted: true
     on_press:
       - switch.toggle: relay2
+
   - platform: gpio
     pin: GPIO15
     id: gpio15_irq
     internal: true
+
+button:
+  - platform: restart
+    name: "${device_name} Restart"
 
 output:
    - platform: gpio
@@ -104,6 +110,7 @@ switch:
     on_turn_off:
       then:
         - output.turn_on: led1
+
   - platform: gpio
     pin: GPIO14
     restore_mode: RESTORE_DEFAULT_OFF
