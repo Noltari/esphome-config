@@ -1,6 +1,5 @@
 substitutions:
   device_name: "magichome5ch"
-  friendly_name: "Magic Home RGB/WW/CW"
 
 esphome:
   name: ${device_name}
@@ -21,6 +20,7 @@ logger:
   baud_rate: 0
 
 api:
+  reboot_timeout: 60min
   password: !secret api_pass
 
 ota:
@@ -35,10 +35,14 @@ web_server:
 binary_sensor:
   - platform: gpio
     name: "${device_name} Button"
-    id: button
+    id: button1
     pin:
       number: GPIO0
       inverted: true
+
+button:
+  - platform: restart
+    name: "${device_name} Restart"
 
 status_led:
   pin:
@@ -46,44 +50,33 @@ status_led:
     inverted: true
 
 light:
-  - platform: rgbw
-    name: ${friendly_name}
-    id: ${device_name}
-    red: red_channel
-    green: green_channel
-    blue: blue_channel
-    white: cold_white_channel
-    color_interlock: true
+  - platform: monochromatic
+    name: "${device_name} LED 1"
+    id: led1
+    output: green_channel
     effects:
-      - random:
-          name: "Slow Random Colors"
-          transition_length: 30s
-          update_interval: 30s
-      - random:
-          name: "Fast Random Colors"
-          transition_length: 4s
-          update_interval: 5s
-      - strobe:
-          name: "Default Strobe"
       - flicker:
           name: "Default Flicker"
+      - pulse:
+          name: "Default Pulse"
+      - random:
+          name: "Default random"
       - strobe:
-          name: "Christmas"
-          colors:
-            - state: True
-              brightness: 100%
-              white: 0%
-              red: 100%
-              blue: 0%
-              green: 0%
-              duration: 500ms
-            - state: True
-              brightness: 100%
-              white: 0%
-              red: 0%
-              blue: 0%
-              green: 100%
-              duration: 500ms
+          name: "Default Strobe"
+
+  - platform: monochromatic
+    name: "${device_name} LED 2"
+    id: led2
+    output: blue_channel
+    effects:
+      - flicker:
+          name: "Default Flicker"
+      - pulse:
+          name: "Default Pulse"
+      - random:
+          name: "Default random"
+      - strobe:
+          name: "Default Strobe"
 
 output:
   - platform: esp8266_pwm
@@ -105,11 +98,33 @@ output:
 sensor:
   - platform: uptime
     name: "${device_name} Uptime"
-    unit_of_measurement: days
-    update_interval: 300s
-    filters:
-      - multiply: 0.000011574
+    id: uptime_sensor
+    update_interval: 60s
+    on_raw_value:
+      then:
+        - text_sensor.template.publish:
+            id: uptime_human
+            state: !lambda |-
+              int seconds = round(id(uptime_sensor).raw_state);
+              int days = seconds / (24 * 3600);
+              seconds = seconds % (24 * 3600);
+              int hours = seconds / 3600;
+              seconds = seconds % 3600;
+              int minutes = seconds /  60;
+              seconds = seconds % 60;
+              return (
+                (days ? String(days) + "d " : "") +
+                (hours ? String(hours) + "h " : "") +
+                (minutes ? String(minutes) + "m " : "") +
+                (String(seconds) + "s")
+              ).c_str();
 
   - platform: wifi_signal
     name: "${device_name} WiFi Signal"
     update_interval: 300s
+
+text_sensor:
+  - platform: template
+    name: "${device_name} Uptime Human Readable"
+    id: uptime_human
+    icon: mdi:clock-start
