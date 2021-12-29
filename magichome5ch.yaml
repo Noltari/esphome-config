@@ -85,9 +85,13 @@ output:
   - platform: esp8266_pwm
     id: green_channel
     pin: GPIO12
+    min_power: 0.06
+    zero_means_zero: true
   - platform: esp8266_pwm
     id: blue_channel
     pin: GPIO13
+    min_power: 0.06
+    zero_means_zero: true
   - platform: esp8266_pwm
     id: cold_white_channel
     pin: GPIO5
