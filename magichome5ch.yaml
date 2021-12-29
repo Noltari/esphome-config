@@ -55,12 +55,12 @@ light:
     id: led1
     output: green_channel
     effects:
-      - flicker:
-          name: "Default Flicker"
       - pulse:
           name: "Default Pulse"
-      - random:
-          name: "Default random"
+      - pulse:
+          name: "Slow Pulse"
+          transition_length: 3s
+          update_interval: 3s
       - strobe:
           name: "Default Strobe"
 
@@ -69,12 +69,12 @@ light:
     id: led2
     output: blue_channel
     effects:
-      - flicker:
-          name: "Default Flicker"
       - pulse:
           name: "Default Pulse"
-      - random:
-          name: "Default random"
+      - pulse:
+          name: "Slow Pulse"
+          transition_length: 3s
+          update_interval: 3s
       - strobe:
           name: "Default Strobe"
 
