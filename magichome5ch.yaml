@@ -82,22 +82,33 @@ output:
   - platform: esp8266_pwm
     id: red_channel
     pin: GPIO14
+    min_power: 0.07
+    max_power: 0.68
+    zero_means_zero: true
   - platform: esp8266_pwm
     id: green_channel
     pin: GPIO12
-    min_power: 0.06
+    min_power: 0.07
+    max_power: 0.68
     zero_means_zero: true
   - platform: esp8266_pwm
     id: blue_channel
     pin: GPIO13
-    min_power: 0.06
+    min_power: 0.07
+    max_power: 0.68
     zero_means_zero: true
   - platform: esp8266_pwm
     id: cold_white_channel
     pin: GPIO5
+    min_power: 0.07
+    max_power: 0.68
+    zero_means_zero: true
   - platform: esp8266_pwm
     id: warm_white_channel
     pin: GPIO15
+    min_power: 0.07
+    max_power: 0.68
+    zero_means_zero: true
 
 sensor:
   - platform: uptime
