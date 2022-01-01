@@ -165,16 +165,18 @@ sensor:
     current_resistor: ${current_res}
     voltage_divider: ${voltage_div}
     current:
+      id: hlw8012_current
       name: "${device_name} Current"
       unit_of_measurement: "A"
       icon: mdi:flash-outline
       accuracy_decimals: 3
     voltage:
+      id: hlw8012_voltage
       name: "${device_name} Voltage"
       unit_of_measurement: "V"
-      icon: mdi:flash-outline
-      id: hlw8012_voltage
+      icon: mdi:sine-wave
     power:
+      id: hlw8012_power
       name: "${device_name} Power"
       unit_of_measurement: "W"
       icon: mdi:flash-outline
@@ -192,9 +194,10 @@ sensor:
                 data_template:
                   message: Switch turned off because power exceeded ${max_power}W
     energy:
+      id: hlw8012_energy
       name: "${device_name} Energy"
       unit_of_measurement: "Wh"
-      icon: mdi:flash-outline
+      icon: mdi:lightning-bolt
     change_mode_every: 4
     update_interval: 10s
 
