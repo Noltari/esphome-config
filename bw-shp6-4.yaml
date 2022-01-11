@@ -60,6 +60,7 @@ binary_sensor:
     name: "${device_name} Washer Running"
     id: machine_running
     icon: mdi:washing-machine
+    device_class: running
     filters:
       - delayed_on: 30s
       - delayed_off: 30s
