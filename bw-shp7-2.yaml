@@ -229,9 +229,13 @@ text_sensor:
     icon: mdi:clock-start
 
 time:
-  - platform: homeassistant
-    id: homeassistant_time
-    timezone: Europe/Madrid
+  - platform: sntp
+    id: sntp_time
+    timezone: "Europe/Madrid"
+    servers:
+      - 192.168.1.1
+      - hora.rediris.es
+      - es.pool.ntp.org
     on_time:
       - seconds: 00
         minutes: 00

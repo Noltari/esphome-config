@@ -145,3 +145,12 @@ text_sensor:
     name: "${device_name} Uptime Human Readable"
     id: uptime_human
     icon: mdi:clock-start
+
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: "Europe/Madrid"
+    servers:
+      - 192.168.1.1
+      - hora.rediris.es
+      - es.pool.ntp.org
