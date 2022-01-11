@@ -55,6 +55,7 @@ switch:
     name: "${device_name} Chime Active"
     id: chime_active
     restore_state: false
+    icon: mdi:doorbell
     turn_on_action:
       - globals.set:
           id: chime
