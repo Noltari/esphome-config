@@ -1,8 +1,8 @@
 # SN 3064
-# Usage: Death Star
+# Usage: Washing Machine
 substitutions:
   device_name: bwshp64
-  current_res: "0.00131"
+  current_res: "0.00236"
   voltage_div: "730.5"
   max_power: "3450"
 
@@ -10,7 +10,7 @@ esphome:
   name: ${device_name}
   platform: ESP8266
   board: esp8285
-  esp8266_restore_from_flash: true
+  esp8266_restore_from_flash: false
   on_boot:
     priority: -100
     then:
@@ -56,6 +56,23 @@ binary_sensor:
     on_press:
       - switch.toggle: relay
 
+  - platform: template
+    name: "${device_name} Washer Running"
+    id: machine_running
+    filters:
+      - delayed_on: 30s
+      - delayed_off: 30s
+    lambda: |-
+      if (isnan(id(hlw8012_power).state)) {
+        return {};
+      } else if (id(hlw8012_power).state > 8) {
+        // Running
+        return true;
+      } else {
+        // Not running
+        return false;
+      }
+
 button:
   - platform: restart
     name: "${device_name} Restart"
@@ -69,7 +86,7 @@ output:
 switch:
   - platform: gpio
     pin: GPIO15
-    restore_mode: RESTORE_DEFAULT_OFF
+    restore_mode: RESTORE_DEFAULT_ON
     id: relay
     name: "${device_name} Relay"
     on_turn_on:
