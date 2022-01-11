@@ -59,6 +59,7 @@ binary_sensor:
   - platform: template
     name: "${device_name} Dryer Running"
     id: machine_running
+    icon: mdi:tumble-dryer
     filters:
       - delayed_on: 30s
       - delayed_off: 30s
