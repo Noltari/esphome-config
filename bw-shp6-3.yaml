@@ -5,6 +5,8 @@ substitutions:
   current_res: "0.00131"
   voltage_div: "743.4"
   max_power: "3450"
+  boiler_max_power: "165"
+  boiler_min_power: "5"
 
 esphome:
   name: ${device_name}
@@ -55,6 +57,23 @@ binary_sensor:
       number: GPIO13
     on_press:
       - switch.toggle: relay
+
+  - platform: template
+    name: "${device_name} Boiler Running"
+    id: machine_running
+    icon: mdi:water-boiler
+    device_class: running
+    filters:
+      - delayed_on: 5s
+      - delayed_off: 5s
+    lambda: |-
+      if (isnan(id(hlw8012_power).state)) {
+        return {};
+      } else if (id(hlw8012_power).state > ${boiler_min_power}) {
+        return true;
+      } else {
+        return false;
+      }
 
 button:
   - platform: restart
@@ -154,6 +173,25 @@ sensor:
       icon: mdi:lightning-bolt
     change_mode_every: 4
     update_interval: 10s
+
+  - platform: template
+    name: "${device_name} Boiler Percentage"
+    id: machine_percentage
+    icon: mdi:water-boiler
+    unit_of_measurement: "%"
+    state_class: measurement
+    accuracy_decimals: 0
+    update_interval: 5s
+    lambda: |-
+      if (isnan(id(hlw8012_power).state)) {
+        return {};
+      } else if (id(hlw8012_power).state > ${boiler_max_power}) {
+        return 100.0;
+      } else if (id(hlw8012_power).state < ${boiler_min_power}) {
+        return 0.0;
+      } else {
+        return ((id(hlw8012_power).state - ${boiler_min_power}) * 100) / (${boiler_max_power} - ${boiler_min_power});
+      }
 
 text_sensor:
   - platform: template
