@@ -153,6 +153,18 @@ sensor:
         - sensor.template.publish:
             id: hlw8012_current
             state: !lambda 'return id(hlw8012_voltage).state > 0 ? (id(hlw8012_power).state / id(hlw8012_voltage).state) : 0;'
+        - sensor.template.publish:
+            id: machine_percentage
+            state: !lambda |-
+              if (isnan(id(hlw8012_power).state)) {
+                return {};
+              } else if (id(hlw8012_power).state > ${boiler_max_power}) {
+                return 100.0;
+              } else if (id(hlw8012_power).state < ${boiler_min_power}) {
+                return 0.0;
+              } else {
+                return ((id(hlw8012_power).state - ${boiler_min_power}) * 100) / (${boiler_max_power} - ${boiler_min_power});
+              }
       on_value_range:
         - above: ${max_power}
           then:
@@ -186,17 +198,6 @@ sensor:
     unit_of_measurement: "%"
     state_class: measurement
     accuracy_decimals: 0
-    update_interval: 5s
-    lambda: |-
-      if (isnan(id(hlw8012_power).state)) {
-        return {};
-      } else if (id(hlw8012_power).state > ${boiler_max_power}) {
-        return 100.0;
-      } else if (id(hlw8012_power).state < ${boiler_min_power}) {
-        return 0.0;
-      } else {
-        return ((id(hlw8012_power).state - ${boiler_min_power}) * 100) / (${boiler_max_power} - ${boiler_min_power});
-      }
 
 text_sensor:
   - platform: template
