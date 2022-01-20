@@ -203,6 +203,7 @@ sensor:
     name: "Fan Hours"
     entity_id: sensor.fan_hours
     id: fan_hours
+    internal: true
     on_value:
       - if:
           condition:
