@@ -152,7 +152,14 @@ sensor:
       on_value:
         - sensor.template.publish:
             id: hlw8012_current
-            state: !lambda 'return id(hlw8012_voltage).state > 0 ? (id(hlw8012_power).state / id(hlw8012_voltage).state) : 0;'
+            state: !lambda |-
+              if (isnan(id(hlw8012_power).state) || isnan(id(hlw8012_voltage).state)) {
+                return {};
+              } else if (id(hlw8012_voltage).state > 0) {
+                return id(hlw8012_power).state / id(hlw8012_voltage).state;
+              } else {
+                return {};
+              }
         - sensor.template.publish:
             id: machine_percentage
             state: !lambda |-
@@ -190,6 +197,7 @@ sensor:
     unit_of_measurement: "A"
     icon: mdi:flash-outline
     accuracy_decimals: 3
+    update_interval: never
 
   - platform: template
     name: "${device_name} Boiler Percentage"
@@ -198,6 +206,7 @@ sensor:
     unit_of_measurement: "%"
     state_class: measurement
     accuracy_decimals: 0
+    update_interval: never
 
 text_sensor:
   - platform: template

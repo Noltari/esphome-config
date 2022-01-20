@@ -175,7 +175,14 @@ sensor:
       on_value:
         - sensor.template.publish:
             id: hlw8012_current
-            state: !lambda 'return id(hlw8012_voltage).state > 0 ? (id(hlw8012_power).state / id(hlw8012_voltage).state) : 0;'
+            state: !lambda |-
+              if (isnan(id(hlw8012_power).state) || isnan(id(hlw8012_voltage).state)) {
+                return {};
+              } else if (id(hlw8012_voltage).state > 0) {
+                return id(hlw8012_power).state / id(hlw8012_voltage).state;
+              } else {
+                return {};
+              }
       on_value_range:
         - above: ${max_power}
           then:
@@ -203,6 +210,7 @@ sensor:
     unit_of_measurement: "A"
     icon: mdi:flash-outline
     accuracy_decimals: 3
+    update_interval: never
 
   - platform: homeassistant
     name: "Fan Hours"
