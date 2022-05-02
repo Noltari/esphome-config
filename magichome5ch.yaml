@@ -50,6 +50,12 @@ status_led:
     inverted: true
 
 light:
+  - platform: partition
+    name: "${device_name} LEDs"
+    segments:
+      - single_light_id: led1
+      - single_light_id: led2
+
   - platform: monochromatic
     name: "${device_name} LED 1"
     id: led1
