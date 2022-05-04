@@ -1,5 +1,5 @@
 substitutions:
-  device_name: nodemcu32s
+  device_name: nodemcu-32s
 
 esphome:
   name: ${device_name}

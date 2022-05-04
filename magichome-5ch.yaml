@@ -1,5 +1,5 @@
 substitutions:
-  device_name: "magichome5ch"
+  device_name: "magichome-5ch"
 
 esphome:
   name: ${device_name}

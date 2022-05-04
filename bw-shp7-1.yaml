@@ -1,7 +1,7 @@
 # SN 4462
 # Usage: Salon
 substitutions:
-  device_name: bwshp71
+  device_name: bw-shp7-1
   current_res: "0.00131"
   voltage_div: "951.4"
   max_power: "3680"

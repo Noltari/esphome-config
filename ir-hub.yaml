@@ -1,5 +1,5 @@
 substitutions:
-  device_name: irhub
+  device_name: ir-hub
 
 esphome:
   name: ${device_name}

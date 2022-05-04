@@ -1,7 +1,7 @@
 # SN 2962
 # Usage: Caldera
 substitutions:
-  device_name: bwshp63
+  device_name: bw-shp6-3
   current_res: "0.00131"
   voltage_div: "743.4"
   max_power: "3450"

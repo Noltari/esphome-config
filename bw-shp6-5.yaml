@@ -1,7 +1,7 @@
 # SN 3070
 # Usage: Dishwasher
 substitutions:
-  device_name: bwshp65
+  device_name: bw-shp6-5
   current_res: "0.002358"
   voltage_div: "731"
   max_power: "3450"

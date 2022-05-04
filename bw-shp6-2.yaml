@@ -1,7 +1,7 @@
 # SN 2681
 # Usage: Dyer Machine
 substitutions:
-  device_name: bwshp62
+  device_name: bw-shp6-2
   current_res: "0.002358"
   voltage_div: "720.3"
   max_power: "3450"

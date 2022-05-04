@@ -1,7 +1,7 @@
 # SN 2921
 # Usage: Dormitorio
 substitutions:
-  device_name: bwshp72
+  device_name: bw-shp7-2
   current_res: "0.00131"
   voltage_div: "945.7"
   max_power: "3680"
