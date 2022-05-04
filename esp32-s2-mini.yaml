@@ -1,0 +1,99 @@
+substitutions:
+  device_name: esp32-s2-mini
+
+esphome:
+  name: ${device_name}
+
+esp32:
+  board: lolin_s2_mini
+  variant: esp32s2
+  framework:
+    type: arduino
+    version: 2.0.3
+    platform_version: 4.3.0
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_pass
+  domain: ".lan"
+  reboot_timeout: 60min
+  ap:
+    ssid: ${device_name}
+    password: !secret wifi_ap_pass
+
+captive_portal:
+
+logger:
+  baud_rate: 0
+
+api:
+  reboot_timeout: 60min
+  password: !secret api_pass
+
+ota:
+  password: !secret api_pass
+
+status_led:
+  pin:
+    number: GPIO15
+
+web_server:
+  port: 80
+  auth:
+    username: admin
+    password: !secret api_pass
+
+binary_sensor:
+  - platform: gpio
+    name: "${device_name} Button"
+    id: button1
+    pin:
+      number: GPIO0
+      inverted: true
+
+button:
+  - platform: restart
+    name: "${device_name} Restart"
+
+sensor:
+  - platform: uptime
+    name: "${device_name} Uptime"
+    id: uptime_sensor
+    update_interval: 60s
+    on_raw_value:
+      then:
+        - text_sensor.template.publish:
+            id: uptime_human
+            state: !lambda |-
+              int seconds = round(id(uptime_sensor).raw_state);
+              int days = seconds / (24 * 3600);
+              seconds = seconds % (24 * 3600);
+              int hours = seconds / 3600;
+              seconds = seconds % 3600;
+              int minutes = seconds /  60;
+              seconds = seconds % 60;
+              return (
+                (days ? String(days) + "d " : "") +
+                (hours ? String(hours) + "h " : "") +
+                (minutes ? String(minutes) + "m " : "") +
+                (String(seconds) + "s")
+              ).c_str();
+
+  - platform: wifi_signal
+    name: "${device_name} WiFi Signal"
+    update_interval: 300s
+
+text_sensor:
+  - platform: template
+    name: "${device_name} Uptime Human Readable"
+    id: uptime_human
+    icon: mdi:clock-start
+
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: "Europe/Madrid"
+    servers:
+      - 192.168.1.1
+      - hora.rediris.es
+      - es.pool.ntp.org
