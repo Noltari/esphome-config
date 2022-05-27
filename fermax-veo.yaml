@@ -98,6 +98,7 @@ sensor:
     name: "${device_name} ADC"
     id: adc3
     update_interval: 0ms
+    accuracy_decimals: 2
     pin: GPIO3
     attenuation: 11db
     filters:
