@@ -48,7 +48,7 @@ binary_sensor:
   - platform: analog_threshold
     name: "${device_name} Intercom"
     sensor_id: adc3
-    threshold: 0.75
+    threshold: 2.4
     filters:
       - delayed_off: 3s
 
@@ -102,6 +102,7 @@ sensor:
     pin: GPIO3
     attenuation: 11db
     filters:
+      - multiply: 3.2
       - delta: 0.1
 
 text_sensor:
