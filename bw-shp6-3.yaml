@@ -224,6 +224,7 @@ sensor:
     id: boiler_gas
     icon: mdi:meter-gas-outline
     unit_of_measurement: "Wh"
+    device_class: energy
     state_class: total_increasing
     accuracy_decimals: 0
     update_interval: never
