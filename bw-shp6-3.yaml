@@ -8,6 +8,7 @@ substitutions:
   boiler_gas_conv: "0.064670659"
   boiler_max_power: "165"
   boiler_min_power: "5"
+  conv_wh_m3: "10500"
 
 esphome:
   name: ${device_name}
@@ -192,7 +193,23 @@ sensor:
       icon: mdi:lightning-bolt
       on_value:
         - sensor.template.publish:
-            id: boiler_gas
+            id: boiler_gas_kwh
+            state: !lambda |-
+              if (isnan(id(hlw8012_energy).state)) {
+                return {};
+              } else {
+                return (id(hlw8012_energy).state * ${boiler_gas_conv}) / 1000.0;
+              }
+        - sensor.template.publish:
+            id: boiler_gas_m3
+            state: !lambda |-
+              if (isnan(id(hlw8012_energy).state)) {
+                return {};
+              } else {
+                return (id(hlw8012_energy).state * ${boiler_gas_conv}) / ${conv_wh_m3};
+              }
+        - sensor.template.publish:
+            id: boiler_gas_wh
             state: !lambda |-
               if (isnan(id(hlw8012_energy).state)) {
                 return {};
@@ -220,8 +237,28 @@ sensor:
     update_interval: never
 
   - platform: template
-    name: "${device_name} Boiler Gas Consumption"
-    id: boiler_gas
+    name: "${device_name} Boiler Gas Consumption KWh"
+    id: boiler_gas_kwh
+    icon: mdi:meter-gas-outline
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 3
+    update_interval: never
+
+  - platform: template
+    name: "${device_name} Boiler Gas Consumption m3"
+    id: boiler_gas_m3
+    icon: mdi:meter-gas-outline
+    unit_of_measurement: "m³"
+    device_class: gas
+    state_class: total_increasing
+    accuracy_decimals: 3
+    update_interval: never
+
+  - platform: template
+    name: "${device_name} Boiler Gas Consumption Wh"
+    id: boiler_gas_wh
     icon: mdi:meter-gas-outline
     unit_of_measurement: "Wh"
     device_class: energy
