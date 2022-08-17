@@ -10,7 +10,7 @@ esp32:
   framework:
     type: arduino
     version: 2.0.4
-    platform_version: 4.3.0
+    platform_version: 5.1.0
 
 wifi:
   ssid: !secret wifi_ssid
