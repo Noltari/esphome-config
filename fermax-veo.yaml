@@ -10,7 +10,7 @@ esp32:
   framework:
     type: arduino
     version: 2.0.4
-    platform_version: 5.1.0
+    platform_version: 5.1.1
 
 wifi:
   ssid: !secret wifi_ssid
@@ -93,6 +93,15 @@ sensor:
   - platform: wifi_signal
     name: "${device_name} WiFi Signal"
     update_interval: 300s
+
+  - platform: template
+    name: "${device_name} Temperature"
+    update_interval: 60s
+    id: temp
+    unit_of_measurement: "°C"
+    device_class: "temperature"
+    state_class: "measurement"
+    lambda: return temperatureRead();
 
   - platform: adc
     name: "${device_name} ADC"
