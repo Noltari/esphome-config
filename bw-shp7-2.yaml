@@ -2,25 +2,43 @@
 # Usage: Dormitorio
 substitutions:
   device_name: bw-shp7-2
+  wifi_signal_max: "-40.0"
   current_res: "0.00131"
   voltage_div: "945.7"
   max_power: "3680"
 
 esphome:
   name: ${device_name}
+  on_boot:
+    priority: -100
+    then:
+      - if:
+          condition:
+            switch.is_off: relay1
+          then:
+            output.turn_on: led1
+      - if:
+          condition:
+            switch.is_off: relay2
+          then:
+            output.turn_on: led2
 
 esp8266:
   board: esp8285
-  restore_from_flash: false
+  restore_from_flash: true
 
 wifi:
-  ssid: !secret wifi_ssid
-  password: !secret wifi_pass
   domain: ".lan"
+  output_power: 20
   reboot_timeout: 60min
   ap:
     ssid: ${device_name}
     password: !secret wifi_ap_pass
+  networks:
+    - ssid: !secret wifi_aux_ssid
+      password: !secret wifi_aux_pass
+    - ssid: !secret wifi_ssid
+      password: !secret wifi_pass
 
 captive_portal:
 
@@ -95,20 +113,9 @@ switch:
     on_turn_on:
       then:
         - output.turn_off: led1
-        - if:
-            condition:
-              - script.is_running: fan_script
-            then:
-              - script.stop: fan_script
-        - script.execute: fan_script
     on_turn_off:
       then:
         - output.turn_on: led1
-        - if:
-            condition:
-              - script.is_running: fan_script
-            then:
-              - script.stop: fan_script
 
   - platform: gpio
     pin: GPIO14
@@ -154,6 +161,13 @@ sensor:
   - platform: wifi_signal
     name: "${device_name} WiFi Signal"
     update_interval: 300s
+    filters:
+      - lambda: |-
+          if (x <= ${wifi_signal_max}) {
+            return x;
+          } else {
+            return {};
+          }
 
   - platform: hlw8012
     sel_pin:
@@ -213,30 +227,6 @@ sensor:
     accuracy_decimals: 3
     update_interval: never
 
-  - platform: homeassistant
-    name: "Fan Hours"
-    entity_id: sensor.fan_hours
-    id: fan_hours
-    internal: true
-    on_value:
-      - if:
-          condition:
-            - script.is_running: fan_script
-          then:
-            - script.stop: fan_script
-            - script.execute: fan_script
-
-script:
-  - id: fan_script
-    then:
-      - switch.turn_on: relay1
-      - if:
-          condition:
-            lambda: 'return id(fan_hours).state > 0;'
-          then:
-            - delay: !lambda 'return id(fan_hours).state * 60 * 60 * 1000;'
-            - switch.turn_off: relay1
-
 text_sensor:
   - platform: template
     name: "${device_name} Uptime Human Readable"
@@ -251,14 +241,3 @@ time:
       - 192.168.1.1
       - hora.rediris.es
       - es.pool.ntp.org
-    on_time:
-      - seconds: 00
-        minutes: 00
-        hours: 7
-        then:
-          - switch.turn_off: relay2
-      - seconds: 00
-        minutes: 00
-        hours: 22
-        then:
-          - switch.turn_on: relay2

@@ -1,5 +1,6 @@
 substitutions:
   device_name: fermax-veo
+  wifi_signal_max: "-15.0"
 
 esphome:
   name: ${device_name}
@@ -13,14 +14,17 @@ esp32:
     platform_version: 5.2.0
 
 wifi:
-  ssid: !secret wifi_ssid
-  password: !secret wifi_pass
   domain: ".lan"
+  output_power: 8.5
   reboot_timeout: 60min
   ap:
     ssid: ${device_name}
     password: !secret wifi_ap_pass
-  output_power: 8.5
+  networks:
+    - ssid: !secret wifi_aux_ssid
+      password: !secret wifi_aux_pass
+    - ssid: !secret wifi_ssid
+      password: !secret wifi_pass
 
 captive_portal:
 
@@ -93,6 +97,13 @@ sensor:
   - platform: wifi_signal
     name: "${device_name} WiFi Signal"
     update_interval: 300s
+    filters:
+      - lambda: |-
+          if (x <= ${wifi_signal_max}) {
+            return x;
+          } else {
+            return {};
+          }
 
   - platform: template
     name: "${device_name} Temperature"

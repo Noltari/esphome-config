@@ -2,6 +2,7 @@
 # Usage: Caldera
 substitutions:
   device_name: bw-shp6-3
+  wifi_signal_max: "-40.0"
   current_res: "0.00131"
   voltage_div: "743.4"
   max_power: "3450"
@@ -27,6 +28,7 @@ esp8266:
 
 wifi:
   domain: ".lan"
+  output_power: 20
   reboot_timeout: 60min
   ap:
     ssid: ${device_name}
@@ -136,6 +138,13 @@ sensor:
   - platform: wifi_signal
     name: "${device_name} WiFi Signal"
     update_interval: 300s
+    filters:
+      - lambda: |-
+          if (x <= ${wifi_signal_max}) {
+            return x;
+          } else {
+            return {};
+          }
 
   - platform: hlw8012
     sel_pin:

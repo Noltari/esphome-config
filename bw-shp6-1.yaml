@@ -2,6 +2,7 @@
 # Usage: Skynet
 substitutions:
   device_name: bw-shp6-1
+  wifi_signal_max: "-40.0"
   current_res: "0.00131"
   voltage_div: "755"
   max_power: "3450"
@@ -22,13 +23,15 @@ esp8266:
   restore_from_flash: true
 
 wifi:
-  ssid: !secret wifi_ssid
-  password: !secret wifi_pass
   domain: ".lan"
+  output_power: 20
   reboot_timeout: 60min
   ap:
     ssid: ${device_name}
     password: !secret wifi_ap_pass
+  networks:
+    - ssid: !secret wifi_ssid
+      password: !secret wifi_pass
 
 captive_portal:
 
@@ -112,6 +115,13 @@ sensor:
   - platform: wifi_signal
     name: "${device_name} WiFi Signal"
     update_interval: 300s
+    filters:
+      - lambda: |-
+          if (x <= ${wifi_signal_max}) {
+            return x;
+          } else {
+            return {};
+          }
 
   - platform: hlw8012
     sel_pin:
