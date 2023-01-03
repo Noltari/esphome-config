@@ -152,7 +152,7 @@ sensor:
 
   - platform: wifi_signal
     name: "${device_name} WiFi Signal"
-    update_interval: 300s
+    update_interval: 60s
     filters:
       - lambda: |-
           if (x <= ${wifi_signal_max}) {
