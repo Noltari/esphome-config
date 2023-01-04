@@ -1,0 +1,153 @@
+substitutions:
+  device_name: nodemcu-32s
+
+esphome:
+  name: ${device_name}
+  includes:
+    - lora-pulse-counter.h
+  libraries:
+    - SPI
+    - "LoRaRF"
+
+esp32:
+  board: nodemcu-32s
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_pass
+  domain: ".lan"
+  reboot_timeout: 60min
+  ap:
+    ssid: ${device_name}
+    password: !secret wifi_ap_pass
+
+captive_portal:
+
+logger:
+  baud_rate: 0
+
+api:
+  reboot_timeout: 60min
+  password: !secret api_pass
+
+ota:
+  password: !secret api_pass
+
+web_server:
+  port: 80
+  auth:
+    username: admin
+    password: !secret api_pass
+
+button:
+  - platform: restart
+    name: "${device_name} Restart"
+
+binary_sensor:
+  - platform: template
+    name: "${device_name} Pulse Active"
+    id: pulse_active
+
+sensor:
+  - platform: uptime
+    name: "${device_name} Uptime"
+    id: uptime_sensor
+    update_interval: 60s
+    on_raw_value:
+      then:
+        - text_sensor.template.publish:
+            id: uptime_human
+            state: !lambda |-
+              int seconds = round(id(uptime_sensor).raw_state);
+              int days = seconds / (24 * 3600);
+              seconds = seconds % (24 * 3600);
+              int hours = seconds / 3600;
+              seconds = seconds % 3600;
+              int minutes = seconds /  60;
+              seconds = seconds % 60;
+              return (
+                (days ? String(days) + "d " : "") +
+                (hours ? String(hours) + "h " : "") +
+                (minutes ? String(minutes) + "m " : "") +
+                (String(seconds) + "s")
+              ).c_str();
+
+  - platform: wifi_signal
+    name: "${device_name} WiFi Signal"
+    update_interval: 60s
+
+  - platform: custom
+    lambda: |-
+      auto lora = new LoRaSensors(
+        5, // nSS - GPIO5
+        14 // nRST - GPIO14
+      );
+      App.register_component(lora);
+      return {
+        lora->pulse_active_sensor,
+        lora->pulse_sensor,
+        lora->gas_sensor,
+        lora->cell_volts_sensor,
+        lora->bat_volts_sensor,
+        lora->temp_sensor,
+        lora->rssi_sensor,
+        lora->snr_sensor
+      };
+    sensors:
+      - id: lora_sx1276_pulse_active
+        accuracy_decimals: 0
+        on_raw_value:
+          then:
+            - binary_sensor.template.publish:
+                id: pulse_active
+                state: !lambda |-
+                  return int(id(lora_sx1276_pulse_active).raw_state) == 1;
+      - id: lora_sx1276_pulses
+        name: "${device_name} Pulses"
+        accuracy_decimals: 0
+      - id: lora_sx1276_gas_meter
+        name: "${device_name} Gas Meter"
+        unit_of_measurement: "m³"
+        accuracy_decimals: 2
+      - id: lora_sx1276_cell_voltage
+        name: "${device_name} Cell Voltage"
+        unit_of_measurement: "V"
+        accuracy_decimals: 2
+      - id: lora_sx1276_bat_voltage
+        name: "${device_name} Battery Voltage"
+        unit_of_measurement: "V"
+        accuracy_decimals: 2
+      - id: lora_sx1276_temperature
+        name: "${device_name} Temperature"
+        unit_of_measurement: "ºC"
+        accuracy_decimals: 0
+      - id: lora_sx1276_rssi
+        name: "${device_name} LoRa RSSI"
+        unit_of_measurement: "dBm"
+        accuracy_decimals: 0
+        entity_category: diagnostic
+      - id: lora_sx1276_snr
+        name: "${device_name} LoRa SNR"
+        unit_of_measurement: "dB"
+        accuracy_decimals: 0
+        entity_category: diagnostic
+
+spi:
+  clk_pin: GPIO18
+  mosi_pin: GPIO23
+  miso_pin: GPIO19
+
+text_sensor:
+  - platform: template
+    name: "${device_name} Uptime Human Readable"
+    id: uptime_human
+    icon: mdi:clock-start
+
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: "Europe/Madrid"
+    servers:
+      - 192.168.1.1
+      - hora.rediris.es
+      - es.pool.ntp.org
