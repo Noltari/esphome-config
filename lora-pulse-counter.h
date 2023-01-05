@@ -32,19 +32,16 @@
 #define ADC_REF 3.36f
 #define ADC_RES 1023
 #define BAT_CNT 4.0f
+#define GAS_CONV 100.0f
+
+#define LORA_POLLING 100
+#define LORA_WAIT 5
 
 class LoRaSensors : public PollingComponent
 {
   private:
     SX127x lora;
     int lora_on = 0;
-
-    float cell_volts = 0.0f;
-    bool pulse_active = false;
-    int pulse_cnt = -1;
-    int rssi = -1;
-    int snr = -1;
-    int temp = -1;
 
     int SS;
     int RST;
@@ -59,7 +56,7 @@ class LoRaSensors : public PollingComponent
     Sensor *rssi_sensor = new Sensor();
     Sensor *snr_sensor = new Sensor();
 
-    LoRaSensors(int SS, int RST) : PollingComponent(100)
+    LoRaSensors(int SS, int RST) : PollingComponent(LORA_POLLING)
     {
       this->SS = SS;
       this->RST = RST;
@@ -105,49 +102,49 @@ class LoRaSensors : public PollingComponent
     {
       int off = 0;
 
-#if defined(CRC16_ENABLE)
-      ESP_LOGD("LoRa", "LoRa: RX len=%d bytes=[%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X]",
-        len, data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], data[9], data[10]);
-
-      uint16_t crc16_lora = (data[DATA_SIZE] << 8);
-      crc16_lora |= (data[DATA_SIZE + 1] << 0);
-      crc16_calc = esphome::crc16(pkt, DATA_SIZE);
-      if (crc16_lora != crc16_calc)
-      {
-        ESP_LOGE("LoRa", "LoRa: CRC16 error RX=%04X vs Calc=%04X", crc16_lora, crc16_calc);
-        return;
-      }
-#else
       ESP_LOGD("LoRa", "LoRa: RX len=%d bytes=[%02X %02X %02X %02X %02X %02X %02X %02X %02X]",
         len, data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8]);
-#endif /* CRC16_ENABLE */
 
       if (data[off++] == 'L' && data[off++] == 'A')
       {
-        this->pulse_cnt = (data[off++] << 24);
-        this->pulse_cnt |= (data[off++] << 16);
-        this->pulse_cnt |= (data[off++] << 8);
-        this->pulse_cnt |= (data[off++] << 0);
-        this->pulse_sensor->publish_state(this->pulse_cnt);
-        this->gas_sensor->publish_state(this->pulse_cnt / 100.0f);
+        /* Pulse counter */
+        uint32_t pulse_cnt = (data[off++] << 24);
+        pulse_cnt |= (data[off++] << 16);
+        pulse_cnt |= (data[off++] << 8);
+        pulse_cnt |= (data[off++] << 0);
 
+        /* Misc */
         uint32_t misc = (data[off++] << 16);
         misc |= (data[off++] << 8);
         misc |= (data[off++] << 0);
 
-        this->cell_volts = (((misc >> VCC_SHIFT) & ADC_MASK) * ADC_REF) / ADC_RES;
-        this->temp = (misc >> TEMP_SHIFT) & ADC_MASK;
-        this->pulse_active = !!(misc & PULSE_BIT);
-        this->pulse_active_sensor->publish_state(this->pulse_active);
-        this->cell_volts_sensor->publish_state(this->cell_volts);
-        this->bat_volts_sensor->publish_state(this->cell_volts * BAT_CNT);
-        this->temp_sensor->publish_state(this->temp);
+        float cell_volts = (((misc >> VCC_SHIFT) & ADC_MASK) * ADC_REF) / ADC_RES;
+        bool pulse_active = !!(misc & PULSE_BIT);
+        int temp = (misc >> TEMP_SHIFT) & ADC_MASK;
 
-        this->rssi = this->lora.packetRssi();
-        this->rssi_sensor->publish_state(this->rssi);
+        /* LoRa signal */
+        int16_t rssi = this->lora.packetRssi();
+        float snr = this->lora.snr();
 
-        this->snr = this->lora.snr();
-        this->snr_sensor->publish_state(this->snr);
+        /* CRC16 */
+#if defined(CRC16_ENABLE)
+        uint16_t crc16_calc = esphome::crc16(data, DATA_SIZE);
+        uint16_t crc16_lora = (data[DATA_SIZE] << 8) | (data[DATA_SIZE + 1] << 0);
+        if (crc16_lora != crc16_calc)
+        {
+          ESP_LOGE("LoRa", "LoRa: CRC16 error RX=%04X vs Calc=%04X", crc16_lora, crc16_calc);
+          return;
+        }
+#endif /* CRC16_ENABLE */
+
+        this->bat_volts_sensor->publish_state(cell_volts * BAT_CNT);
+        this->cell_volts_sensor->publish_state(cell_volts);
+        this->gas_sensor->publish_state(pulse_cnt / GAS_CONV);
+        this->pulse_active_sensor->publish_state(pulse_active);
+        this->pulse_sensor->publish_state(pulse_cnt);
+        this->rssi_sensor->publish_state(rssi);
+        this->snr_sensor->publish_state(snr);
+        this->temp_sensor->publish_state(temp);
       }
     }
 
@@ -164,7 +161,7 @@ class LoRaSensors : public PollingComponent
       }
       else
       {
-        this->lora.wait(100);
+        this->lora.wait(LORA_WAIT);
 
         uint8_t status = this->lora.status();
         if (status == SX127X_STATUS_RX_DONE)
