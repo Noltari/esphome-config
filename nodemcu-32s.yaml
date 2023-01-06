@@ -108,7 +108,10 @@ sensor:
       - id: lora_sx1276_gas_meter
         name: "${device_name} Gas Meter"
         unit_of_measurement: "m³"
+        device_class: gas
+        state_class: total_increasing
         accuracy_decimals: 2
+        icon: mdi:meter-gas-outline
       - id: lora_sx1276_cell_voltage
         name: "${device_name} Cell Voltage"
         unit_of_measurement: "V"

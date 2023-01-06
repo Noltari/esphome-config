@@ -6,7 +6,7 @@
 #define LORA_BW 125000
 #define LORA_CODE_RATE 5
 #define LORA_CRC_ENABLE true
-#define LORA_FREQ 868000000
+#define LORA_FREQ 869525000
 #define LORA_HDR_TYPE SX127X_HEADER_IMPLICIT
 #define LORA_PREAMBLE_LEN 8
 #define LORA_SPREAD_FACTOR 7
@@ -77,7 +77,7 @@ class LoRaSensors : public PollingComponent
 
         this->lora.setFrequency(LORA_FREQ);
 
-        this->lora.setRxGain(SX127X_RX_GAIN_POWER_SAVING, SX127X_RX_GAIN_AUTO);
+        this->lora.setRxGain(LORA_RX_GAIN_BOOSTED, SX127X_RX_GAIN_AUTO);
 
         this->lora.setSpreadingFactor(LORA_SPREAD_FACTOR);
         this->lora.setBandwidth(LORA_BW);
