@@ -127,7 +127,7 @@ sensor:
         state_class: measurement
       - id: lora_sx1276_temperature
         name: "${device_name} Temperature"
-        unit_of_measurement: "ºC"
+        unit_of_measurement: "°C"
         accuracy_decimals: 0
         device_class: temperature
         state_class: measurement
