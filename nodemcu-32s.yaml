@@ -105,34 +105,45 @@ sensor:
       - id: lora_sx1276_pulses
         name: "${device_name} Pulses"
         accuracy_decimals: 0
+        icon: mdi:counter
       - id: lora_sx1276_gas_meter
         name: "${device_name} Gas Meter"
         unit_of_measurement: "m³"
-        device_class: gas
-        state_class: total_increasing
         accuracy_decimals: 2
         icon: mdi:meter-gas-outline
+        device_class: gas
+        state_class: total_increasing
       - id: lora_sx1276_cell_voltage
         name: "${device_name} Cell Voltage"
         unit_of_measurement: "V"
         accuracy_decimals: 2
+        device_class: voltage
+        state_class: measurement
       - id: lora_sx1276_bat_voltage
         name: "${device_name} Battery Voltage"
         unit_of_measurement: "V"
         accuracy_decimals: 2
+        device_class: voltage
+        state_class: measurement
       - id: lora_sx1276_temperature
         name: "${device_name} Temperature"
         unit_of_measurement: "ºC"
         accuracy_decimals: 0
+        device_class: temperature
+        state_class: measurement
       - id: lora_sx1276_rssi
         name: "${device_name} LoRa RSSI"
         unit_of_measurement: "dBm"
         accuracy_decimals: 0
+        device_class: signal_strength
+        state_class: measurement
         entity_category: diagnostic
       - id: lora_sx1276_snr
         name: "${device_name} LoRa SNR"
         unit_of_measurement: "dB"
         accuracy_decimals: 0
+        device_class: signal_strength
+        state_class: measurement
         entity_category: diagnostic
 
 spi:
@@ -145,6 +156,7 @@ text_sensor:
     name: "${device_name} Uptime Human Readable"
     id: uptime_human
     icon: mdi:clock-start
+    entity_category: diagnostic
 
 time:
   - platform: sntp
