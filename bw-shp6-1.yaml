@@ -184,6 +184,7 @@ text_sensor:
     name: "${device_name} Uptime Human Readable"
     id: uptime_human
     icon: mdi:clock-start
+    entity_category: diagnostic
 
 time:
   - platform: sntp
