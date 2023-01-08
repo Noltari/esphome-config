@@ -35,13 +35,15 @@
 #define GAS_CONV 100.0f
 
 #define LORA_POLLING 100
+#define LORA_START_INTERVAL 10000
 #define LORA_WAIT 5
 
 class LoRaSensors : public PollingComponent
 {
   private:
     SX127x lora;
-    int lora_on = 0;
+    unsigned long lora_millis;
+    bool lora_on;
 
     int SS;
     int RST;
@@ -58,6 +60,8 @@ class LoRaSensors : public PollingComponent
 
     LoRaSensors(int SS, int RST) : PollingComponent(LORA_POLLING)
     {
+      this->lora_millis = 0;
+      this->lora_on = false;
       this->SS = SS;
       this->RST = RST;
     }
@@ -69,9 +73,11 @@ class LoRaSensors : public PollingComponent
 
     void lora_start(void)
     {
+      this->lora_millis = millis();
+
       if (this->lora.begin(this->SS, this->RST, -1, -1, -1))
       {
-        this->lora_on = 1;
+        this->lora_on = true;
 
         ESP_LOGI("LoRa", "LoRa started succesfully");
 
@@ -127,15 +133,15 @@ class LoRaSensors : public PollingComponent
         float snr = this->lora.snr();
 
         /* CRC16 */
-#if defined(CRC16_ENABLE)
-        uint16_t crc16_calc = esphome::crc16(data, DATA_SIZE);
-        uint16_t crc16_lora = (data[DATA_SIZE] << 8) | (data[DATA_SIZE + 1] << 0);
-        if (crc16_lora != crc16_calc)
-        {
-          ESP_LOGE("LoRa", "LoRa: CRC16 error RX=%04X vs Calc=%04X", crc16_lora, crc16_calc);
-          return;
-        }
-#endif /* CRC16_ENABLE */
+        #if defined(CRC16_ENABLE)
+          uint16_t crc16_calc = esphome::crc16(data, DATA_SIZE);
+          uint16_t crc16_lora = (data[DATA_SIZE] << 8) | (data[DATA_SIZE + 1] << 0);
+          if (crc16_lora != crc16_calc)
+          {
+            ESP_LOGE("LoRa", "LoRa: CRC16 error RX=%04X vs Calc=%04X", crc16_lora, crc16_calc);
+            return;
+          }
+        #endif /* CRC16_ENABLE */
 
         this->bat_volts_sensor->publish_state(cell_volts * BAT_CNT);
         this->cell_volts_sensor->publish_state(cell_volts);
@@ -157,7 +163,10 @@ class LoRaSensors : public PollingComponent
     {
       if (!this->lora_on)
       {
-        this->lora_start();
+        if (millis() > this->lora_millis + LORA_START_INTERVAL)
+        {
+          this->lora_start();
+        }
       }
       else
       {
