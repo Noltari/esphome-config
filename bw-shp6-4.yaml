@@ -9,6 +9,8 @@ substitutions:
 
 esphome:
   name: ${device_name}
+  platformio_options:
+    board_build.f_cpu: 80000000L
   on_boot:
     priority: -100
     then:

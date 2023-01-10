@@ -4,6 +4,8 @@ substitutions:
 
 esphome:
   name: ${device_name}
+  platformio_options:
+    board_build.f_cpu: 80000000L
 
 esp8266:
   board: esp01_1m
