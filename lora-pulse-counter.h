@@ -27,12 +27,9 @@
 #define ADC_MASK 0x3FF
 #define VCC_SHIFT 0
 #define TEMP_SHIFT 10
-#define PULSE_BIT (1UL << 20)
 
 #define ADC_REF 3.36f
 #define ADC_RES 1023
-#define BAT_CNT 4.0f
-#define GAS_CONV 100.0f
 
 #define LORA_POLLING 100
 #define LORA_START_INTERVAL 10000
@@ -49,11 +46,8 @@ class LoRaSensors : public PollingComponent
     int RST;
 
   public:
-    Sensor *pulse_active_sensor = new Sensor();
     Sensor *pulse_sensor = new Sensor();
-    Sensor *gas_sensor = new Sensor();
     Sensor *cell_volts_sensor = new Sensor();
-    Sensor *bat_volts_sensor = new Sensor();
     Sensor *temp_sensor = new Sensor();
     Sensor *rssi_sensor = new Sensor();
     Sensor *snr_sensor = new Sensor();
@@ -125,7 +119,6 @@ class LoRaSensors : public PollingComponent
         misc |= (data[off++] << 0);
 
         float cell_volts = (((misc >> VCC_SHIFT) & ADC_MASK) * ADC_REF) / ADC_RES;
-        bool pulse_active = !!(misc & PULSE_BIT);
         int temp = (misc >> TEMP_SHIFT) & ADC_MASK;
 
         /* LoRa signal */
@@ -143,10 +136,7 @@ class LoRaSensors : public PollingComponent
           }
         #endif /* CRC16_ENABLE */
 
-        this->bat_volts_sensor->publish_state(cell_volts * BAT_CNT);
         this->cell_volts_sensor->publish_state(cell_volts);
-        this->gas_sensor->publish_state(pulse_cnt / GAS_CONV);
-        this->pulse_active_sensor->publish_state(pulse_active);
         this->pulse_sensor->publish_state(pulse_cnt);
         this->rssi_sensor->publish_state(rssi);
         this->snr_sensor->publish_state(snr);
