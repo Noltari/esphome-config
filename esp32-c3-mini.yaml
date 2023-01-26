@@ -15,13 +15,14 @@ esp32:
   framework:
     type: arduino
     version: 2.0.6
-    platform_version: 5.3.0
+    platform_version: 6.0.0
 
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_pass
   domain: ".lan"
   reboot_timeout: 60min
+  output_power: 17
   ap:
     ssid: ${device_name}
     password: !secret wifi_ap_pass
@@ -29,7 +30,7 @@ wifi:
 captive_portal:
 
 logger:
-  # baud_rate: 0
+  baud_rate: 0
 
 api:
   reboot_timeout: 60min
@@ -48,21 +49,14 @@ button:
   - platform: restart
     name: "${device_name} Restart"
 
-binary_sensor:
-  - platform: template
-    name: "${device_name} Pulse Active"
-    id: pulse_active
-
 output:
-  - platform: ledc
-    pin: GPIO3
-    id: out_3
-    min_power: 0.01
-    max_power: 1.00
+  - platform: gpio
+    pin: GPIO1
+    id: out_1
 
 fan:
-  - platform: speed
-    output: out_3
+  - platform: binary
+    output: out_1
     name: "${device_name} Fan"
 
 light:
@@ -106,7 +100,7 @@ sensor:
     name: "${device_name} Fan Speed"
     id: fan_speed
     pin: 
-      number: GPIO2
+      number: GPIO0
       mode: INPUT_PULLUP
     unit_of_measurement: 'RPM'
     update_interval: 60s
@@ -127,54 +121,40 @@ sensor:
   - platform: custom
     lambda: |-
       auto lora = new LoRaSensors(
-        5, // nSS - GPIO5
-        4 // nRST - GPIO4
+        8, // nSS - GPIO5
+        6 // nRST - GPIO4
       );
       App.register_component(lora);
       return {
-        lora->pulse_active_sensor,
         lora->pulse_sensor,
-        lora->gas_sensor,
         lora->cell_volts_sensor,
-        lora->bat_volts_sensor,
         lora->temp_sensor,
         lora->rssi_sensor,
         lora->snr_sensor
       };
     sensors:
-      - id: lora_sx1276_pulse_active
-        accuracy_decimals: 0
-        on_raw_value:
-          then:
-            - binary_sensor.template.publish:
-                id: pulse_active
-                state: !lambda |-
-                  return int(id(lora_sx1276_pulse_active).raw_state) == 1;
       - id: lora_sx1276_pulses
         name: "${device_name} Pulses"
         accuracy_decimals: 0
         icon: mdi:counter
-      - id: lora_sx1276_gas_meter
-        name: "${device_name} Gas Meter"
-        unit_of_measurement: "m³"
-        accuracy_decimals: 2
-        icon: mdi:meter-gas-outline
-        device_class: gas
-        state_class: total_increasing
+        on_raw_value:
+          then:
+            - sensor.template.publish:
+                id: lora_sx1276_gas_meter
+                state: !lambda |-
+                  return id(lora_sx1276_pulses).raw_state * 0.01;
+            - sensor.template.publish:
+                id: lora_sx1276_gas_energy
+                state: !lambda |-
+                  return id(lora_sx1276_pulses).raw_state * 0.10636;
       - id: lora_sx1276_cell_voltage
         name: "${device_name} Cell Voltage"
         unit_of_measurement: "V"
         accuracy_decimals: 2
         device_class: voltage
         state_class: measurement
-      - id: lora_sx1276_bat_voltage
-        name: "${device_name} Battery Voltage"
-        unit_of_measurement: "V"
-        accuracy_decimals: 2
-        device_class: voltage
-        state_class: measurement
       - id: lora_sx1276_temperature
-        name: "${device_name} Temperature"
+        name: "${device_name} ATTiny84 Temperature"
         unit_of_measurement: "°C"
         accuracy_decimals: 0
         device_class: temperature
@@ -189,20 +169,40 @@ sensor:
       - id: lora_sx1276_snr
         name: "${device_name} LoRa SNR"
         unit_of_measurement: "dB"
-        accuracy_decimals: 0
+        accuracy_decimals: 2
         device_class: signal_strength
         state_class: measurement
         entity_category: diagnostic
 
+  - platform: template
+    name: "${device_name} Gas Meter"
+    id: lora_sx1276_gas_meter
+    icon: mdi:meter-gas-outline
+    unit_of_measurement: "m³"
+    device_class: gas
+    state_class: total_increasing
+    accuracy_decimals: 2
+    update_interval: never
+
+  - platform: template
+    name: "${device_name} Gas Energy kWh"
+    id: lora_sx1276_gas_energy
+    icon: mdi:meter-gas-outline
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 3
+    update_interval: never
+
 i2c:
-  sda: GPIO0
-  scl: GPIO1
-  scan: true
+  sda: GPIO4
+  scl: GPIO5
+  scan: false
 
 spi:
-  clk_pin: GPIO6
-  mosi_pin: GPIO8
-  miso_pin: GPIO10
+  clk_pin: GPIO10
+  mosi_pin: GPIO3
+  miso_pin: GPIO2
 
 text_sensor:
   - platform: template

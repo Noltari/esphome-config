@@ -3,11 +3,6 @@ substitutions:
 
 esphome:
   name: ${device_name}
-  includes:
-    - lora-pulse-counter.h
-  libraries:
-    - SPI
-    - "LoRaRF"
 
 esp32:
   board: nodemcu-32s
@@ -70,87 +65,6 @@ sensor:
   - platform: wifi_signal
     name: "${device_name} WiFi Signal"
     update_interval: 60s
-
-  - platform: custom
-    lambda: |-
-      auto lora = new LoRaSensors(
-        5, // nSS - GPIO5
-        14 // nRST - GPIO14
-      );
-      App.register_component(lora);
-      return {
-        lora->pulse_sensor,
-        lora->cell_volts_sensor,
-        lora->temp_sensor,
-        lora->rssi_sensor,
-        lora->snr_sensor
-      };
-    sensors:
-      - id: lora_sx1276_pulses
-        name: "${device_name} Pulses"
-        accuracy_decimals: 0
-        icon: mdi:counter
-        on_raw_value:
-          then:
-            - sensor.template.publish:
-                id: lora_sx1276_gas_meter
-                state: !lambda |-
-                  return id(lora_sx1276_pulses).raw_state * 0.01;
-            - sensor.template.publish:
-                id: lora_sx1276_gas_energy
-                state: !lambda |-
-                  return id(lora_sx1276_pulses).raw_state * 0.10636;
-      - id: lora_sx1276_cell_voltage
-        name: "${device_name} Cell Voltage"
-        unit_of_measurement: "V"
-        accuracy_decimals: 2
-        device_class: voltage
-        state_class: measurement
-      - id: lora_sx1276_temperature
-        name: "${device_name} ATTiny84 Temperature"
-        unit_of_measurement: "°C"
-        accuracy_decimals: 0
-        device_class: temperature
-        state_class: measurement
-      - id: lora_sx1276_rssi
-        name: "${device_name} LoRa RSSI"
-        unit_of_measurement: "dBm"
-        accuracy_decimals: 0
-        device_class: signal_strength
-        state_class: measurement
-        entity_category: diagnostic
-      - id: lora_sx1276_snr
-        name: "${device_name} LoRa SNR"
-        unit_of_measurement: "dB"
-        accuracy_decimals: 2
-        device_class: signal_strength
-        state_class: measurement
-        entity_category: diagnostic
-
-  - platform: template
-    name: "${device_name} Gas Meter"
-    id: lora_sx1276_gas_meter
-    icon: mdi:meter-gas-outline
-    unit_of_measurement: "m³"
-    device_class: gas
-    state_class: total_increasing
-    accuracy_decimals: 2
-    update_interval: never
-
-  - platform: template
-    name: "${device_name} Gas Energy kWh"
-    id: lora_sx1276_gas_energy
-    icon: mdi:meter-gas-outline
-    unit_of_measurement: "kWh"
-    device_class: energy
-    state_class: total_increasing
-    accuracy_decimals: 3
-    update_interval: never
-
-spi:
-  clk_pin: GPIO18
-  mosi_pin: GPIO23
-  miso_pin: GPIO19
 
 text_sensor:
   - platform: template
