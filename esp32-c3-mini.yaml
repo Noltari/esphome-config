@@ -1,6 +1,12 @@
 substitutions:
   device_name: esp32-c3-mini
 
+external_components:
+  - source: github://pr#3820
+    components: [ ledc ]
+  - source: github://pr#4338
+    components: [ ledc ]
+
 esphome:
   name: ${device_name}
   includes:
@@ -50,14 +56,31 @@ button:
     name: "${device_name} Restart"
 
 output:
-  - platform: gpio
+  - platform: ledc
     pin: GPIO1
-    id: out_1
+    id: ledc_gpio1
+    frequency: 128 Hz
+    min_power: 33%
+    max_power: 100%
+    zero_means_zero: True
 
 fan:
-  - platform: binary
-    output: out_1
-    name: "${device_name} Fan"
+- platform: speed
+  name: "${device_name} Fan"
+  id: fan_gpio1
+  output: ledc_gpio1
+  on_turn_on:
+    lambda: |-
+      auto speed = id(fan_gpio1).speed;
+
+      auto call = id(fan_gpio1).turn_on();
+      call.set_speed(100);
+      call.perform();
+
+      delay(1000);
+
+      call.set_speed(speed);
+      call.perform();
 
 light:
   - platform: neopixelbus
@@ -103,7 +126,7 @@ sensor:
       number: GPIO0
       mode: INPUT_PULLUP
     unit_of_measurement: 'RPM'
-    update_interval: 60s
+    update_interval: 30s
     filters:
       - multiply: 0.5
 
