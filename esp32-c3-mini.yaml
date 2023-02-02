@@ -166,10 +166,6 @@ sensor:
                 id: lora_sx1276_gas_meter
                 state: !lambda |-
                   return id(lora_sx1276_pulses).raw_state * 0.01;
-            - sensor.template.publish:
-                id: lora_sx1276_gas_energy
-                state: !lambda |-
-                  return id(lora_sx1276_pulses).raw_state * 0.10636;
       - id: lora_sx1276_cell_voltage
         name: "${device_name} Cell Voltage"
         unit_of_measurement: "V"
@@ -205,16 +201,6 @@ sensor:
     device_class: gas
     state_class: total_increasing
     accuracy_decimals: 2
-    update_interval: never
-
-  - platform: template
-    name: "${device_name} Gas Energy kWh"
-    id: lora_sx1276_gas_energy
-    icon: mdi:meter-gas-outline
-    unit_of_measurement: "kWh"
-    device_class: energy
-    state_class: total_increasing
-    accuracy_decimals: 3
     update_interval: never
 
 i2c:
