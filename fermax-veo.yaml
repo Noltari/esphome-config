@@ -13,7 +13,7 @@ esp32:
   framework:
     type: arduino
     version: 2.0.6
-    platform_version: 6.0.0
+    platform_version: 6.0.1
 
 wifi:
   domain: ".lan"
