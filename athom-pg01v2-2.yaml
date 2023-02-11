@@ -1,0 +1,165 @@
+# SN ???
+# Usage: ???
+substitutions:
+  device_name: athom-pg01v2-2
+  wifi_signal_max: "-40.0"
+  max_power: "3680"
+
+esphome:
+  name: ${device_name}
+  platformio_options:
+    board_build.f_cpu: 80000000L
+
+esp8266:
+  board: esp8285
+  restore_from_flash: true
+
+wifi:
+  domain: ".lan"
+  output_power: 20
+  reboot_timeout: 60min
+  ap:
+    ssid: ${device_name}
+    password: !secret wifi_ap_pass
+  networks:
+    - ssid: !secret wifi_ssid
+      password: !secret wifi_pass
+
+captive_portal:
+
+logger:
+  baud_rate: 0
+
+api:
+  reboot_timeout: 60min
+  encryption:
+    key: !secret api_key
+
+ota:
+  password: !secret api_pass
+
+web_server:
+  port: 80
+  auth:
+    username: admin
+    password: !secret api_pass
+
+binary_sensor:
+  - platform: gpio
+    id: button1
+    internal: true
+    pin:
+      number: GPIO5
+      mode: INPUT_PULLUP
+      inverted: true
+    on_press:
+      - switch.toggle: relay
+
+button:
+  - platform: restart
+    name: "${device_name} Restart"
+
+switch:
+  - platform: gpio
+    pin:
+      number: GPIO12
+    restore_mode: RESTORE_DEFAULT_ON
+    id: relay
+    name: "${device_name} Relay"
+
+status_led:
+  pin:
+    number: GPIO13
+    inverted: true
+
+sensor:
+  - platform: uptime
+    name: "${device_name} Uptime"
+    id: uptime_sensor
+    update_interval: 60s
+    on_raw_value:
+      then:
+        - text_sensor.template.publish:
+            id: uptime_human
+            state: !lambda |-
+              int seconds = round(id(uptime_sensor).raw_state);
+              int days = seconds / (24 * 3600);
+              seconds = seconds % (24 * 3600);
+              int hours = seconds / 3600;
+              seconds = seconds % 3600;
+              int minutes = seconds /  60;
+              seconds = seconds % 60;
+              return (
+                (days ? String(days) + "d " : "") +
+                (hours ? String(hours) + "h " : "") +
+                (minutes ? String(minutes) + "m " : "") +
+                (String(seconds) + "s")
+              ).c_str();
+
+  - platform: wifi_signal
+    name: "${device_name} WiFi Signal"
+    update_interval: 60s
+    filters:
+      - lambda: |-
+          if (x <= ${wifi_signal_max}) {
+            return x;
+          } else {
+            return {};
+          }
+
+  - platform: cse7766
+    voltage:
+      id: cse7766_voltage
+      name: "${device_name} Voltage"
+      unit_of_measurement: "V"
+      icon: mdi:sine-wave
+      filters:
+        - lambda: if (x < 3.0) return 0.0; else return x;
+    current:
+      id: cse7766_current
+      name: "${device_name} Current"
+      unit_of_measurement: "A"
+      icon: mdi:flash-outline
+      filters:
+        - lambda: if (x < 0.060) return 0.0; else return x;
+    power:
+      id: cse7766_power
+      name: "${device_name} Power"
+      unit_of_measurement: "W"
+      icon: mdi:flash-outline
+      on_value_range:
+        - above: ${max_power}
+          then:
+            - switch.turn_off: relay
+            - homeassistant.service:
+                service: persistent_notification.create
+                data:
+                  title: Message from ${device_name}
+                data_template:
+                  message: Switch turned off because power exceeded ${max_power}W
+    energy:
+      id: cse7766_energy
+      name: "${device_name} Energy"
+      unit_of_measurement: "Wh"
+      icon: mdi:lightning-bolt
+    update_interval: 10s
+
+text_sensor:
+  - platform: template
+    name: "${device_name} Uptime Human Readable"
+    id: uptime_human
+    icon: mdi:clock-start
+    entity_category: diagnostic
+
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: "Europe/Madrid"
+    servers:
+      - 192.168.1.1
+      - hora.rediris.es
+      - es.pool.ntp.org
+
+uart:
+  rx_pin: RX
+  baud_rate: 4800
