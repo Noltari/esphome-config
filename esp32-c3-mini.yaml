@@ -24,14 +24,17 @@ esp32:
     platform_version: 6.0.1
 
 wifi:
-  ssid: !secret wifi_ssid
-  password: !secret wifi_pass
   domain: ".lan"
-  reboot_timeout: 60min
   output_power: 17
+  reboot_timeout: 60min
   ap:
     ssid: ${device_name}
     password: !secret wifi_ap_pass
+  networks:
+    - ssid: !secret wifi_ssid
+      password: !secret wifi_pass
+    - ssid: !secret wifi_aux_ssid
+      password: !secret wifi_aux_pass
 
 captive_portal:
 
