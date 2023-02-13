@@ -1,5 +1,6 @@
 substitutions:
   device_name: esp32-c3-mini
+  pulse_gas_conv: "0.005"
 
 external_components:
   - source: github://pr#3820
@@ -169,7 +170,7 @@ sensor:
             - sensor.template.publish:
                 id: lora_sx1276_gas_meter
                 state: !lambda |-
-                  return id(lora_sx1276_pulses).raw_state * 0.01;
+                  return id(lora_sx1276_pulses).raw_state * ${pulse_gas_conv};
       - id: lora_sx1276_cell_voltage
         name: "${device_name} Cell Voltage"
         unit_of_measurement: "V"
