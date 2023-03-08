@@ -2,12 +2,6 @@ substitutions:
   device_name: esp32-c3-mini
   pulse_gas_conv: "0.005"
 
-external_components:
-  - source: github://pr#3820
-    components: [ ledc ]
-  - source: github://pr#4338
-    components: [ ledc ]
-
 esphome:
   name: ${device_name}
   includes:
