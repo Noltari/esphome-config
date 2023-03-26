@@ -108,6 +108,10 @@ sensor:
             return {};
           }
 
+  - platform: internal_temperature
+    name: "${device_name} SoC Temperature"
+    update_interval: 60s
+
   - platform: template
     name: "${device_name} Temperature"
     update_interval: 60s

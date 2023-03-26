@@ -118,6 +118,10 @@ sensor:
     name: "${device_name} WiFi Signal"
     update_interval: 60s
 
+  - platform: internal_temperature
+    name: "${device_name} SoC Temperature"
+    update_interval: 60s
+
   - platform: pulse_counter
     name: "${device_name} Fan Speed"
     id: fan_speed
