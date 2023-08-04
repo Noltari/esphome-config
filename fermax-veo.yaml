@@ -112,15 +112,6 @@ sensor:
     name: "${device_name} SoC Temperature"
     update_interval: 60s
 
-  - platform: template
-    name: "${device_name} Temperature"
-    update_interval: 60s
-    id: temp
-    unit_of_measurement: "°C"
-    device_class: "temperature"
-    state_class: "measurement"
-    lambda: return temperatureRead();
-
   - platform: adc
     name: "${device_name} ADC"
     id: adc3
