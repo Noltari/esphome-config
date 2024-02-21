@@ -115,6 +115,7 @@ sensor:
       icon: mdi:sine-wave
       filters:
         - lambda: if (x < 3.0) return 0.0; else return x;
+        - throttle: 10s
     current:
       id: cse7766_current
       name: "${device_name} Current"
@@ -122,11 +123,14 @@ sensor:
       icon: mdi:flash-outline
       filters:
         - lambda: if (x < 0.060) return 0.0; else return x;
+        - throttle_average: 10s
     power:
       id: cse7766_power
       name: "${device_name} Power"
       unit_of_measurement: "W"
       icon: mdi:flash-outline
+      filters:
+        - throttle_average: 10s
       on_value_range:
         - above: ${max_power}
           then:
@@ -142,7 +146,8 @@ sensor:
       name: "${device_name} Energy"
       unit_of_measurement: "Wh"
       icon: mdi:lightning-bolt
-    update_interval: 10s
+      filters:
+        - throttle: 10s
 
 text_sensor:
   - platform: template
