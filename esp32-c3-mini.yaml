@@ -133,7 +133,7 @@ sensor:
     filters:
       - multiply: 0.5
 
-  - platform: bme280
+  - platform: bme280_i2c
     update_interval: 60s
     address: 0x76
     temperature:
