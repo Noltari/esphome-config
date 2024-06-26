@@ -12,8 +12,8 @@ esp32:
   variant: esp32c3
   framework:
     type: arduino
-    version: 2.0.14
-    platform_version: 6.5.0
+    version: 2.0.16
+    platform_version: 6.7.0
 
 wifi:
   domain: ".lan"
