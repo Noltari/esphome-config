@@ -77,7 +77,7 @@ binary_sensor:
     lambda: |-
       if (isnan(id(hlw8012_power).state)) {
         return {};
-      } else if (id(hlw8012_power).state > 100) {
+      } else if (id(hlw8012_power).state > 5) {
         // Running
         return true;
       } else {
