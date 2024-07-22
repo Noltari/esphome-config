@@ -117,30 +117,6 @@ status_led:
 
 sensor:
   - platform: uptime
-    name: "${device_name} Uptime"
-    type: seconds
-    id: uptime_sensor
-    update_interval: 60s
-    on_raw_value:
-      then:
-        - text_sensor.template.publish:
-            id: uptime_human
-            state: !lambda |-
-              int seconds = round(id(uptime_sensor).raw_state);
-              int days = seconds / (24 * 3600);
-              seconds = seconds % (24 * 3600);
-              int hours = seconds / 3600;
-              seconds = seconds % 3600;
-              int minutes = seconds /  60;
-              seconds = seconds % 60;
-              return (
-                (days ? String(days) + "d " : "") +
-                (hours ? String(hours) + "h " : "") +
-                (minutes ? String(minutes) + "m " : "") +
-                (String(seconds) + "s")
-              ).c_str();
-
-  - platform: uptime
     name: "${device_name} Uptime Timestamp"
     type: timestamp
 
@@ -286,13 +262,6 @@ sensor:
     state_class: total_increasing
     accuracy_decimals: 0
     update_interval: never
-
-text_sensor:
-  - platform: template
-    name: "${device_name} Uptime Human Readable"
-    id: uptime_human
-    icon: mdi:clock-start
-    entity_category: diagnostic
 
 time:
   - platform: sntp
