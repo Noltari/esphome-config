@@ -100,7 +100,7 @@ sensor:
     update_interval: 0ms
     accuracy_decimals: 2
     pin: GPIO3
-    attenuation: 11db
+    attenuation: 12db
     filters:
       - multiply: 3.2
       - delta: 0.1
