@@ -138,6 +138,7 @@ status_led:
 sensor:
   - platform: uptime
     name: "${device_name} Uptime"
+    type: seconds
     id: uptime_sensor
     update_interval: 60s
     on_raw_value:
@@ -158,6 +159,10 @@ sensor:
                 (minutes ? String(minutes) + "m " : "") +
                 (String(seconds) + "s")
               ).c_str();
+
+  - platform: uptime
+    name: "${device_name} Uptime Timestamp"
+    type: timestamp
 
   - platform: wifi_signal
     name: "${device_name} WiFi Signal"
