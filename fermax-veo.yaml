@@ -10,10 +10,6 @@ esphome:
 esp32:
   board: lolin_c3_mini
   variant: esp32c3
-  framework:
-    type: arduino
-    version: 2.0.17
-    platform_version: 6.8.1
 
 wifi:
   domain: ".lan"
