@@ -4,15 +4,14 @@ substitutions:
 
 esphome:
   name: ${device_name}
-  includes:
-    - lora-pulse-counter.h
-  libraries:
-    - SPI
-    - "LoRaRF"
 
 esp32:
   board: lolin_c3_mini
   variant: esp32c3
+
+external_components:
+  - source: github://Noltari/esphome-components@master
+    components: [ lora_pulse_counter ]
 
 wifi:
   domain: ".lan"
@@ -46,6 +45,17 @@ web_server:
   auth:
     username: admin
     password: !secret api_pass
+
+lora_pulse_counter:
+  id: lpc
+  lora_rst: 6
+  lora_ss: 8
+
+binary_sensor:
+  - platform: lora_pulse_counter
+    lpc_id: lpc
+    voltage_low:
+      name: "${device_name} Low Battery"
 
 button:
   - platform: restart
@@ -122,57 +132,25 @@ sensor:
     humidity:
       name: "${device_name} Humidity"
 
-  - platform: custom
-    lambda: |-
-      auto lora = new LoRaSensors(
-        8, // nSS - GPIO5
-        6 // nRST - GPIO4
-      );
-      App.register_component(lora);
-      return {
-        lora->pulse_sensor,
-        lora->cell_volts_sensor,
-        lora->temp_sensor,
-        lora->rssi_sensor,
-        lora->snr_sensor
-      };
-    sensors:
-      - id: lora_sx1276_pulses
-        name: "${device_name} Pulses"
-        accuracy_decimals: 0
-        icon: mdi:counter
-        on_raw_value:
-          then:
-            - sensor.template.publish:
-                id: lora_sx1276_gas_meter
-                state: !lambda |-
-                  return id(lora_sx1276_pulses).raw_state * ${pulse_gas_conv};
-      - id: lora_sx1276_cell_voltage
-        name: "${device_name} Cell Voltage"
-        unit_of_measurement: "V"
-        accuracy_decimals: 2
-        device_class: voltage
-        state_class: measurement
-      - id: lora_sx1276_temperature
-        name: "${device_name} ATTiny84 Temperature"
-        unit_of_measurement: "°C"
-        accuracy_decimals: 0
-        device_class: temperature
-        state_class: measurement
-      - id: lora_sx1276_rssi
-        name: "${device_name} LoRa RSSI"
-        unit_of_measurement: "dBm"
-        accuracy_decimals: 0
-        device_class: signal_strength
-        state_class: measurement
-        entity_category: diagnostic
-      - id: lora_sx1276_snr
-        name: "${device_name} LoRa SNR"
-        unit_of_measurement: "dB"
-        accuracy_decimals: 2
-        device_class: signal_strength
-        state_class: measurement
-        entity_category: diagnostic
+  - platform: lora_pulse_counter
+    lpc_id: lpc
+    pulses:
+      id: lora_sx1276_pulses
+      name: "${device_name} Pulses"
+      on_raw_value:
+        then:
+          - sensor.template.publish:
+              id: lora_sx1276_gas_meter
+              state: !lambda |-
+                return id(lora_sx1276_pulses).raw_state * ${pulse_gas_conv};
+    voltage:
+      name: "${device_name} Cell Voltage"
+    temperature:
+      name: "${device_name} ATTiny84 Temperature"
+    rssi:
+      name: "${device_name} LoRa RSSI"
+    snr:
+      name: "${device_name} LoRa SNR"
 
   - platform: template
     name: "${device_name} Gas Meter"
