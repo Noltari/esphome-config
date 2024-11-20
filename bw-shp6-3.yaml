@@ -1,10 +1,8 @@
 # SN 2962
 # Usage: Caldera
 substitutions:
-  boiler_gas_conv: "0.064670659"
   boiler_max_power: "165"
   boiler_min_power: "5"
-  conv_wh_m3: "10500"
   current_res: "0.00131"
   device_name: bw-shp6-3
   logger_baud_rate: "0"
@@ -127,31 +125,6 @@ sensor:
       name: "${device_name} Energy"
       unit_of_measurement: "Wh"
       icon: mdi:lightning-bolt
-      on_value:
-        - sensor.template.publish:
-            id: boiler_gas_kwh
-            state: !lambda |-
-              if (isnan(id(hlw8012_energy).state)) {
-                return {};
-              } else {
-                return (id(hlw8012_energy).state * ${boiler_gas_conv}) / 1000.0;
-              }
-        - sensor.template.publish:
-            id: boiler_gas_m3
-            state: !lambda |-
-              if (isnan(id(hlw8012_energy).state)) {
-                return {};
-              } else {
-                return (id(hlw8012_energy).state * ${boiler_gas_conv}) / ${conv_wh_m3};
-              }
-        - sensor.template.publish:
-            id: boiler_gas_wh
-            state: !lambda |-
-              if (isnan(id(hlw8012_energy).state)) {
-                return {};
-              } else {
-                return (id(hlw8012_energy).state * ${boiler_gas_conv});
-              }
     change_mode_every: 4294967295
     update_interval: 10s
 
@@ -169,36 +142,6 @@ sensor:
     icon: mdi:water-boiler
     unit_of_measurement: "%"
     state_class: measurement
-    accuracy_decimals: 0
-    update_interval: never
-
-  - platform: template
-    name: "${device_name} Boiler Gas Consumption KWh"
-    id: boiler_gas_kwh
-    icon: mdi:meter-gas-outline
-    unit_of_measurement: "kWh"
-    device_class: energy
-    state_class: total_increasing
-    accuracy_decimals: 3
-    update_interval: never
-
-  - platform: template
-    name: "${device_name} Boiler Gas Consumption m3"
-    id: boiler_gas_m3
-    icon: mdi:meter-gas-outline
-    unit_of_measurement: "m³"
-    device_class: gas
-    state_class: total_increasing
-    accuracy_decimals: 3
-    update_interval: never
-
-  - platform: template
-    name: "${device_name} Boiler Gas Consumption Wh"
-    id: boiler_gas_wh
-    icon: mdi:meter-gas-outline
-    unit_of_measurement: "Wh"
-    device_class: energy
-    state_class: total_increasing
     accuracy_decimals: 0
     update_interval: never
 
