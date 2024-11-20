@@ -11,6 +11,8 @@ substitutions:
   max_power: "3450"
   voltage_div: "743.4"
   wifi_output_power: "20"
+  wifi_priority: "0.0"
+  wifi_priority_aux: "100.0"
   wifi_signal_max: "-40.0"
 
 esphome:

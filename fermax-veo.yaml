@@ -2,6 +2,8 @@ substitutions:
   device_name: fermax-veo
   logger_baud_rate: "0"
   wifi_output_power: "8.5"
+  wifi_priority: "0.0"
+  wifi_priority_aux: "100.0"
   wifi_signal_max: "-15.0"
 
 esphome:

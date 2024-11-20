@@ -57,5 +57,7 @@ wifi:
   networks:
     - ssid: !secret wifi_aux_ssid
       password: !secret wifi_aux_pass
+      priority: ${wifi_priority_aux}
     - ssid: !secret wifi_ssid
       password: !secret wifi_pass
+      priority: ${wifi_priority}

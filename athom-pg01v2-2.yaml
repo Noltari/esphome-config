@@ -1,10 +1,12 @@
 # SN ???
-# Usage: ???
+# Usage: Salon TV
 substitutions:
   device_name: athom-pg01v2-2
   logger_baud_rate: "0"
   max_power: "3680"
   wifi_output_power: "20"
+  wifi_priority: "0.0"
+  wifi_priority_aux: "0.0"
   wifi_signal_max: "-40.0"
 
 esphome:

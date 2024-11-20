@@ -1,5 +1,5 @@
 # SN 3070
-# Usage: Dishwasher
+# Usage: Lavavajillas
 substitutions:
   current_res: "0.002358"
   device_name: bw-shp6-5
@@ -7,6 +7,8 @@ substitutions:
   max_power: "3450"
   voltage_div: "731"
   wifi_output_power: "20"
+  wifi_priority: "0.0"
+  wifi_priority_aux: "100.0"
   wifi_signal_max: "-40.0"
 
 esphome:

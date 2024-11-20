@@ -1,5 +1,5 @@
 # SN 2921
-# Usage: Salon
+# Usage: Salon Lampara
 substitutions:
   current_res: "0.00131"
   device_name: bw-shp7-2
@@ -7,6 +7,8 @@ substitutions:
   max_power: "3680"
   voltage_div: "945.7"
   wifi_output_power: "20"
+  wifi_priority: "0.0"
+  wifi_priority_aux: "0.0"
   wifi_signal_max: "-40.0"
 
 esphome:
