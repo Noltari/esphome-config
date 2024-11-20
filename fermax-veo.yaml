@@ -1,5 +1,7 @@
 substitutions:
   device_name: fermax-veo
+  logger_baud_rate: "0"
+  wifi_output_power: "8.5"
   wifi_signal_max: "-15.0"
 
 esphome:
@@ -11,42 +13,10 @@ esp32:
   board: lolin_c3_mini
   variant: esp32c3
 
-wifi:
-  domain: ".lan"
-  output_power: 8.5
-  reboot_timeout: 60min
-  ap:
-    ssid: ${device_name}
-    password: !secret wifi_ap_pass
-  networks:
-    - ssid: !secret wifi_aux_ssid
-      password: !secret wifi_aux_pass
-    - ssid: !secret wifi_ssid
-      password: !secret wifi_pass
+packages:
+  common: !include .common.yaml
 
-captive_portal:
-
-logger:
-  baud_rate: 0
-
-api:
-  reboot_timeout: 60min
-  encryption:
-    key: !secret api_key
-
-ota:
-  - platform: esphome
-    password: !secret api_pass
-
-status_led:
-  pin:
-    number: GPIO7
-
-web_server:
-  port: 80
-  auth:
-    username: admin
-    password: !secret api_pass
+### Config ###
 
 binary_sensor:
   - platform: analog_threshold
@@ -57,9 +27,6 @@ binary_sensor:
       - delayed_off: 3s
 
 button:
-  - platform: restart
-    name: "${device_name} Restart"
-
   - platform: output
     name: "${device_name} Open"
     output: output_open
@@ -71,21 +38,6 @@ output:
     id: output_open
 
 sensor:
-  - platform: uptime
-    name: "${device_name} Uptime Timestamp"
-    type: timestamp
-
-  - platform: wifi_signal
-    name: "${device_name} WiFi Signal"
-    update_interval: 60s
-    filters:
-      - lambda: |-
-          if (x <= ${wifi_signal_max}) {
-            return x;
-          } else {
-            return {};
-          }
-
   - platform: internal_temperature
     name: "${device_name} SoC Temperature"
     update_interval: 60s
@@ -101,11 +53,6 @@ sensor:
       - multiply: 3.2
       - delta: 0.1
 
-time:
-  - platform: sntp
-    id: sntp_time
-    timezone: "Europe/Madrid"
-    servers:
-      - 192.168.1.1
-      - hora.rediris.es
-      - es.pool.ntp.org
+status_led:
+  pin:
+    number: GPIO7

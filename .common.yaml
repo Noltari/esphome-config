@@ -1,0 +1,61 @@
+api:
+  reboot_timeout: 60min
+  encryption:
+    key: !secret api_key
+
+captive_portal:
+
+button:
+  - platform: restart
+    name: "${device_name} Restart"
+
+logger:
+  baud_rate: ${logger_baud_rate}
+
+ota:
+  - platform: esphome
+    password: !secret api_pass
+
+sensor:
+  - platform: uptime
+    name: "${device_name} Uptime Timestamp"
+    type: timestamp
+
+  - platform: wifi_signal
+    name: "${device_name} WiFi Signal"
+    update_interval: 60s
+    filters:
+      - lambda: |-
+          if (x <= ${wifi_signal_max}) {
+            return x;
+          } else {
+            return {};
+          }
+
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: "Europe/Madrid"
+    servers:
+      - 192.168.1.1
+      - hora.rediris.es
+      - es.pool.ntp.org
+
+web_server:
+  port: 80
+  auth:
+    username: admin
+    password: !secret api_pass
+
+wifi:
+  domain: ".lan"
+  output_power: ${wifi_output_power}
+  reboot_timeout: 60min
+  ap:
+    ssid: ${device_name}
+    password: !secret wifi_ap_pass
+  networks:
+    - ssid: !secret wifi_aux_ssid
+      password: !secret wifi_aux_pass
+    - ssid: !secret wifi_ssid
+      password: !secret wifi_pass

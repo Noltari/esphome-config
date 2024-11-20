@@ -1,5 +1,7 @@
 substitutions:
   device_name: doorbell
+  logger_baud_rate: "0"
+  wifi_output_power: "20"
   wifi_signal_max: "-20.0"
 
 esphome:
@@ -11,72 +13,10 @@ esp8266:
   board: esp01_1m
   restore_from_flash: false
 
-wifi:
-  domain: ".lan"
-  output_power: 20
-  reboot_timeout: 60min
-  ap:
-    ssid: ${device_name}
-    password: !secret wifi_ap_pass
-  networks:
-    - ssid: !secret wifi_aux_ssid
-      password: !secret wifi_aux_pass
-    - ssid: !secret wifi_ssid
-      password: !secret wifi_pass
+packages:
+  common: !include .common.yaml
 
-captive_portal:
-
-logger:
-  baud_rate: 0
-
-api:
-  reboot_timeout: 60min
-  encryption:
-    key: !secret api_key
-
-ota:
-  - platform: esphome
-    password: !secret api_pass
-
-web_server:
-  port: 80
-  auth:
-    username: admin
-    password: !secret api_pass
-
-globals:
-  - id: chime
-    type: bool
-    restore_value: true
-    initial_value: 'true'
-
-button:
-  - platform: restart
-    name: "${device_name} Restart"
-
-switch:
-  - platform: gpio
-    name: "${device_name} Chime"
-    pin: GPIO04
-    id: relay
-    icon: mdi:alarm-bell
-    restore_mode: ALWAYS_OFF
-
-  - platform: template
-    name: "${device_name} Chime Active"
-    id: chime_active
-    restore_mode: "DISABLED"
-    icon: mdi:doorbell
-    turn_on_action:
-      - globals.set:
-          id: chime
-          value: 'true'
-    turn_off_action:
-      - globals.set:
-          id: chime
-          value: 'false'
-    lambda: |-
-      return id(chime);
+### Config ###
 
 binary_sensor:
   - platform: gpio
@@ -101,27 +41,32 @@ binary_sensor:
             - delay: 200ms
             - switch.turn_off: relay
 
-sensor:
-  - platform: uptime
-    name: "${device_name} Uptime Timestamp"
-    type: timestamp
+globals:
+  - id: chime
+    type: bool
+    restore_value: true
+    initial_value: 'true'
 
-  - platform: wifi_signal
-    name: "${device_name} WiFi Signal"
-    update_interval: 60s
-    filters:
-      - lambda: |-
-          if (x <= ${wifi_signal_max}) {
-            return x;
-          } else {
-            return {};
-          }
+switch:
+  - platform: gpio
+    name: "${device_name} Chime"
+    pin: GPIO04
+    id: relay
+    icon: mdi:alarm-bell
+    restore_mode: ALWAYS_OFF
 
-time:
-  - platform: sntp
-    id: sntp_time
-    timezone: "Europe/Madrid"
-    servers:
-      - 192.168.1.1
-      - hora.rediris.es
-      - es.pool.ntp.org
+  - platform: template
+    name: "${device_name} Chime Active"
+    id: chime_active
+    restore_mode: "DISABLED"
+    icon: mdi:doorbell
+    turn_on_action:
+      - globals.set:
+          id: chime
+          value: 'true'
+    turn_off_action:
+      - globals.set:
+          id: chime
+          value: 'false'
+    lambda: |-
+      return id(chime);

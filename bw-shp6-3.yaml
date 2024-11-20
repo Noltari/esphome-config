@@ -1,15 +1,17 @@
 # SN 2962
 # Usage: Caldera
 substitutions:
-  device_name: bw-shp6-3
-  wifi_signal_max: "-40.0"
-  current_res: "0.00131"
-  voltage_div: "743.4"
-  max_power: "3450"
   boiler_gas_conv: "0.064670659"
   boiler_max_power: "165"
   boiler_min_power: "5"
   conv_wh_m3: "10500"
+  current_res: "0.00131"
+  device_name: bw-shp6-3
+  logger_baud_rate: "0"
+  max_power: "3450"
+  voltage_div: "743.4"
+  wifi_output_power: "20"
+  wifi_signal_max: "-40.0"
 
 esphome:
   name: ${device_name}
@@ -28,38 +30,10 @@ esp8266:
   board: esp8285
   restore_from_flash: true
 
-wifi:
-  domain: ".lan"
-  output_power: 20
-  reboot_timeout: 60min
-  ap:
-    ssid: ${device_name}
-    password: !secret wifi_ap_pass
-  networks:
-    - ssid: !secret wifi_aux_ssid
-      password: !secret wifi_aux_pass
-    - ssid: !secret wifi_ssid
-      password: !secret wifi_pass
+packages:
+  common: !include .common.yaml
 
-captive_portal:
-
-logger:
-  baud_rate: 0
-
-api:
-  reboot_timeout: 60min
-  encryption:
-    key: !secret api_key
-
-ota:
-  - platform: esphome
-    password: !secret api_pass
-
-web_server:
-  port: 80
-  auth:
-    username: admin
-    password: !secret api_pass
+### Config ###
 
 binary_sensor:
   - platform: gpio
@@ -87,50 +61,13 @@ binary_sensor:
         return false;
       }
 
-button:
-  - platform: restart
-    name: "${device_name} Restart"
-
 output:
   - platform: gpio
     pin: GPIO0
     inverted: true
     id: led
 
-switch:
-  - platform: gpio
-    pin: GPIO15
-    restore_mode: RESTORE_DEFAULT_ON
-    id: relay
-    name: "${device_name} Relay"
-    on_turn_on:
-      then:
-        - output.turn_off: led
-    on_turn_off:
-      then:
-        - output.turn_on: led
-
-status_led:
-  pin:
-    number: GPIO2
-    inverted: true
-
 sensor:
-  - platform: uptime
-    name: "${device_name} Uptime Timestamp"
-    type: timestamp
-
-  - platform: wifi_signal
-    name: "${device_name} WiFi Signal"
-    update_interval: 60s
-    filters:
-      - lambda: |-
-          if (x <= ${wifi_signal_max}) {
-            return x;
-          } else {
-            return {};
-          }
-
   - platform: hlw8012
     sel_pin:
       number: GPIO12
@@ -263,11 +200,20 @@ sensor:
     accuracy_decimals: 0
     update_interval: never
 
-time:
-  - platform: sntp
-    id: sntp_time
-    timezone: "Europe/Madrid"
-    servers:
-      - 192.168.1.1
-      - hora.rediris.es
-      - es.pool.ntp.org
+status_led:
+  pin:
+    number: GPIO2
+    inverted: true
+
+switch:
+  - platform: gpio
+    pin: GPIO15
+    restore_mode: RESTORE_DEFAULT_ON
+    id: relay
+    name: "${device_name} Relay"
+    on_turn_on:
+      then:
+        - output.turn_off: led
+    on_turn_off:
+      then:
+        - output.turn_on: led

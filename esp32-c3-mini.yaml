@@ -1,6 +1,9 @@
 substitutions:
   device_name: esp32-c3-mini
+  logger_baud_rate: "0"
   pulse_gas_conv: "0.005"
+  wifi_output_power: "17"
+  wifi_signal_max: "-5.0"
 
 esphome:
   name: ${device_name}
@@ -13,43 +16,10 @@ external_components:
   - source: github://Noltari/esphome-components@master
     components: [ lora_pulse_counter ]
 
-wifi:
-  domain: ".lan"
-  output_power: 17
-  reboot_timeout: 60min
-  ap:
-    ssid: ${device_name}
-    password: !secret wifi_ap_pass
-  networks:
-    - ssid: !secret wifi_ssid
-      password: !secret wifi_pass
-    - ssid: !secret wifi_aux_ssid
-      password: !secret wifi_aux_pass
+packages:
+  common: !include .common.yaml
 
-captive_portal:
-
-logger:
-  baud_rate: 0
-
-api:
-  reboot_timeout: 60min
-  encryption:
-    key: !secret api_key
-
-ota:
-  - platform: esphome
-    password: !secret api_pass
-
-web_server:
-  port: 80
-  auth:
-    username: admin
-    password: !secret api_pass
-
-lora_pulse_counter:
-  id: lpc
-  lora_rst: 6
-  lora_ss: 8
+### Config ###
 
 binary_sensor:
   - platform: lora_pulse_counter
@@ -57,18 +27,10 @@ binary_sensor:
     voltage_low:
       name: "${device_name} Low Battery"
 
-button:
-  - platform: restart
-    name: "${device_name} Restart"
-
-output:
-  - platform: ledc
-    pin: GPIO1
-    id: ledc_gpio1
-    frequency: 128 Hz
-    min_power: 33%
-    max_power: 100%
-    zero_means_zero: True
+i2c:
+  sda: GPIO4
+  scl: GPIO5
+  scan: false
 
 fan:
 - platform: speed
@@ -97,15 +59,21 @@ light:
     pin: GPIO7
     num_leds: 1
 
+lora_pulse_counter:
+  id: lpc
+  lora_rst: 6
+  lora_ss: 8
+
+output:
+  - platform: ledc
+    pin: GPIO1
+    id: ledc_gpio1
+    frequency: 128 Hz
+    min_power: 33%
+    max_power: 100%
+    zero_means_zero: True
+
 sensor:
-  - platform: uptime
-    name: "${device_name} Uptime Timestamp"
-    type: timestamp
-
-  - platform: wifi_signal
-    name: "${device_name} WiFi Signal"
-    update_interval: 60s
-
   - platform: internal_temperature
     name: "${device_name} SoC Temperature"
     update_interval: 60s
@@ -162,21 +130,7 @@ sensor:
     accuracy_decimals: 2
     update_interval: never
 
-i2c:
-  sda: GPIO4
-  scl: GPIO5
-  scan: false
-
 spi:
   clk_pin: GPIO10
   mosi_pin: GPIO3
   miso_pin: GPIO2
-
-time:
-  - platform: sntp
-    id: sntp_time
-    timezone: "Europe/Madrid"
-    servers:
-      - 192.168.1.1
-      - hora.rediris.es
-      - es.pool.ntp.org

@@ -1,11 +1,13 @@
 # SN 2921
-# Usage: Dormitorio
+# Usage: Salon
 substitutions:
-  device_name: bw-shp7-2
-  wifi_signal_max: "-40.0"
   current_res: "0.00131"
-  voltage_div: "945.7"
+  device_name: bw-shp7-2
+  logger_baud_rate: "0"
   max_power: "3680"
+  voltage_div: "945.7"
+  wifi_output_power: "20"
+  wifi_signal_max: "-40.0"
 
 esphome:
   name: ${device_name}
@@ -29,38 +31,10 @@ esp8266:
   board: esp8285
   restore_from_flash: true
 
-wifi:
-  domain: ".lan"
-  output_power: 20
-  reboot_timeout: 60min
-  ap:
-    ssid: ${device_name}
-    password: !secret wifi_ap_pass
-  networks:
-    - ssid: !secret wifi_aux_ssid
-      password: !secret wifi_aux_pass
-    - ssid: !secret wifi_ssid
-      password: !secret wifi_pass
+packages:
+  common: !include .common.yaml
 
-captive_portal:
-
-logger:
-  baud_rate: 0
-
-api:
-  reboot_timeout: 60min
-  encryption:
-    key: !secret api_key
-
-ota:
-  - platform: esphome
-    password: !secret api_pass
-
-web_server:
-  port: 80
-  auth:
-    username: admin
-    password: !secret api_pass
+### Config ###
 
 binary_sensor:
   - platform: gpio
@@ -92,10 +66,6 @@ binary_sensor:
     id: gpio15_irq
     internal: true
 
-button:
-  - platform: restart
-    name: "${device_name} Restart"
-
 output:
    - platform: gpio
      id: led1
@@ -108,52 +78,7 @@ output:
        number: GPIO2
        inverted: true
 
-switch:
-  - platform: gpio
-    pin: GPIO16
-    restore_mode: RESTORE_DEFAULT_OFF
-    id: relay1
-    name: "${device_name} Relay 1"
-    on_turn_on:
-      then:
-        - output.turn_off: led1
-    on_turn_off:
-      then:
-        - output.turn_on: led1
-
-  - platform: gpio
-    pin: GPIO14
-    restore_mode: RESTORE_DEFAULT_OFF
-    id: relay2
-    name: "${device_name} Relay 2"
-    on_turn_on:
-      then:
-        - output.turn_off: led2
-    on_turn_off:
-      then:
-        - output.turn_on: led2
-
-status_led:
-  pin:
-    number: GPIO1
-    inverted: true
-
 sensor:
-  - platform: uptime
-    name: "${device_name} Uptime Timestamp"
-    type: timestamp
-
-  - platform: wifi_signal
-    name: "${device_name} WiFi Signal"
-    update_interval: 60s
-    filters:
-      - lambda: |-
-          if (x <= ${wifi_signal_max}) {
-            return x;
-          } else {
-            return {};
-          }
-
   - platform: hlw8012
     sel_pin:
       number: GPIO3
@@ -212,11 +137,32 @@ sensor:
     accuracy_decimals: 3
     update_interval: never
 
-time:
-  - platform: sntp
-    id: sntp_time
-    timezone: "Europe/Madrid"
-    servers:
-      - 192.168.1.1
-      - hora.rediris.es
-      - es.pool.ntp.org
+status_led:
+  pin:
+    number: GPIO1
+    inverted: true
+
+switch:
+  - platform: gpio
+    pin: GPIO16
+    restore_mode: RESTORE_DEFAULT_OFF
+    id: relay1
+    name: "${device_name} Relay 1"
+    on_turn_on:
+      then:
+        - output.turn_off: led1
+    on_turn_off:
+      then:
+        - output.turn_on: led1
+
+  - platform: gpio
+    pin: GPIO14
+    restore_mode: RESTORE_DEFAULT_OFF
+    id: relay2
+    name: "${device_name} Relay 2"
+    on_turn_on:
+      then:
+        - output.turn_off: led2
+    on_turn_off:
+      then:
+        - output.turn_on: led2
