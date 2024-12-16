@@ -114,13 +114,55 @@ sensor:
               state: !lambda |-
                 return id(lora_sx1276_pulses).raw_state * ${pulse_gas_conv};
     voltage:
+      id: lora_sx1276_voltage
       name: "${device_name} Cell Voltage"
+      on_raw_value:
+        then:
+          - sensor.template.publish:
+              id: lora_sx1276_battery_percentage
+              state: !lambda |-
+                float v = id(lora_sx1276_voltage).raw_state;
+
+                if (v >= 1.55)
+                {
+                  // static value
+                  return 100.0;
+                }
+                else if (v <= 0)
+                {
+                  // static value
+                  return 0.0;
+                }
+                else if (v > 1.4)
+                {
+                  // linear regression
+                  return 60.60606*v + 6.060606;
+                }
+                else if (v < 1.1)
+                {
+                  // linear regression
+                  return 8.3022 * v;
+                }
+                else
+                {
+                  // cubic regression
+                  return 9412 - (23449 * v) + (19240 * v * v) - (5176 * v * v * v);
+                }
     temperature:
       name: "${device_name} ATTiny84 Temperature"
     rssi:
       name: "${device_name} LoRa RSSI"
     snr:
       name: "${device_name} LoRa SNR"
+
+  - platform: template
+    name: "${device_name} Battery Percentage"
+    id: lora_sx1276_battery_percentage
+    unit_of_measurement: "%"
+    device_class: battery
+    state_class: measurement
+    accuracy_decimals: 0
+    update_interval: never
 
   - platform: template
     name: "${device_name} Gas Meter"
