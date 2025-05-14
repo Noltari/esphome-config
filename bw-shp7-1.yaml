@@ -128,7 +128,7 @@ sensor:
       name: "${device_name} Energy"
       unit_of_measurement: "Wh"
       icon: mdi:lightning-bolt
-    change_mode_every: 4294967295
+    change_mode_every: never
     update_interval: 10s
 
   - platform: template
