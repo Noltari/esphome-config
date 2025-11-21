@@ -2,8 +2,8 @@ substitutions:
   device_name: doorbell
   logger_baud_rate: "0"
   wifi_output_power: "20"
-  wifi_priority: "0.0"
-  wifi_priority_aux: "100.0"
+  wifi_priority: "0"
+  wifi_priority_aux: "100"
   wifi_signal_max: "-20.0"
 
 esphome:
