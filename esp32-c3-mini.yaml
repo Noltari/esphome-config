@@ -13,6 +13,8 @@ esphome:
 esp32:
   board: lolin_c3_mini
   variant: esp32c3
+  framework:
+    type: esp-idf
 
 external_components:
   - source: github://Noltari/esphome-components@master
