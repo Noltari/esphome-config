@@ -49,6 +49,7 @@ web_server:
 
 wifi:
   domain: ".lan"
+  min_auth_mode: "WPA2"
   output_power: ${wifi_output_power}
   reboot_timeout: 60min
   ap:
