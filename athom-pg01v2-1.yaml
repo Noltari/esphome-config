@@ -12,7 +12,9 @@ substitutions:
 esphome:
   name: ${device_name}
   platformio_options:
-    board_build.f_cpu: 80000000L
+    board_build.ldscript: eagle.flash.2m.ld
+    board_upload.flash_size: 2MB
+    board_upload.maximum_size: 2097152
 
 esp8266:
   board: esp8285
