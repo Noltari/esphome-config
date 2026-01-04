@@ -3,11 +3,11 @@ api:
   encryption:
     key: !secret api_key
 
-captive_portal:
-
 button:
   - platform: restart
     name: "${device_name} Restart"
+
+captive_portal:
 
 logger:
   baud_rate: ${logger_baud_rate}
@@ -15,6 +15,9 @@ logger:
 ota:
   - platform: esphome
     password: !secret api_pass
+
+preferences:
+  flash_write_interval: 5min
 
 sensor:
   - platform: uptime
