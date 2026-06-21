@@ -49,7 +49,7 @@ sensor:
   - platform: adc
     name: "${device_name} ADC"
     id: adc3
-    update_interval: 0ms
+    update_interval: 1ms
     accuracy_decimals: 2
     pin: GPIO3
     attenuation: 12db
