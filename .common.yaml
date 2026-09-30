@@ -14,7 +14,7 @@ logger:
 
 ota:
   - platform: esphome
-    password: !secret api_pass
+    encryption:
 
 preferences:
   flash_write_interval: 5min
